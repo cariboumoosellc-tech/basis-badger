@@ -13,8 +13,8 @@ export function middleware(req: NextRequest) {
   if (isDashboard) {
     // This is a workaround: Next.js middleware can't access sessionStorage directly.
     // Instead, check for a cookie or query param set after a free audit.
-    const guestAudit = req.cookies.get('guest_audit');
-    const userEmail = req.cookies.get('user_email');
+    const guestAudit = req.cookies.get('guest_audit')?.value;
+    const userEmail = req.cookies.get('user_email')?.value;
     if (userEmail === 'basisbadgerllc@gmail.com') return NextResponse.next(); // admin bypass
     if (userEmail) return NextResponse.next(); // logged in
     if (guestAudit === 'true') return NextResponse.next(); // allow guest audit
@@ -24,7 +24,7 @@ export function middleware(req: NextRequest) {
 
   // Admin route: only allow admin
   if (isAdmin) {
-    const userEmail = req.cookies.get('user_email');
+    const userEmail = req.cookies.get('user_email')?.value;
     if (userEmail === 'basisbadgerllc@gmail.com') return NextResponse.next();
     return NextResponse.redirect(new URL('/', req.url));
   }
