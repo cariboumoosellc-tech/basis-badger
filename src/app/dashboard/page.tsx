@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import CertificateOfFindingsSneakPeek from "@/components/CertificateOfFindingsSneakPeek";
 import CertificateOfFindings from "@/components/CertificateOfFindings";
 import Head from "next/head";
@@ -25,6 +26,9 @@ const MOCK_AUDITS = [];
 export default function BadgerDen() {
   // Check for redirect from lead and load audit if present
   const [audits, setAudits] = useState(() => {
+      // Red flag/audit result state for ROI hook
+      const [auditResult, setAuditResult] = useState<{ totalSavings: number, businessName: string, date: string } | null>(null);
+      const router = useRouter();
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('badger-latest-audit');
       if (stored) {
@@ -63,7 +67,8 @@ export default function BadgerDen() {
   const [activeFilter, setActiveFilter] = useState('All');
   // Branding: logo and title always visible
   // Metrics
-  const totalWaste = audits.reduce((sum, a) => sum + a.savings, 0);
+  // Use auditResult for Identified Waste (ROI hook)
+  const totalWaste = auditResult?.totalSavings ?? audits.reduce((sum, a) => sum + a.savings, 0);
   const verifiedSavings = audits.filter(a => a.status === 'Savings Verified').reduce((sum, a) => sum + a.savings, 0);
     const [showVerifyModal, setShowVerifyModal] = useState<{ open: boolean, audit: any | null }>({ open: false, audit: null });
     const [showConfetti, setShowConfetti] = useState(false);
@@ -71,21 +76,22 @@ export default function BadgerDen() {
   // Scanner state
   const [isScanning, setIsScanning] = useState(false);
 
-  // Simulate scan completion and add a new audit
+  // Simulate scan completion and add a new audit (Vault integration)
   const handleAuditNewStatement = async () => {
     setView('scanner');
     setIsScanning(true);
-    // Simulate scan delay
     setTimeout(() => {
+      // Simulate a real audit result
       const newAudit = {
-        id: audits.length + 1,
+        id: Date.now(),
         fileName: `Merchant_Statement_${Date.now()}.pdf`,
         date: new Date().toISOString().slice(0, 10),
         savings: Math.floor(Math.random() * 2000) + 500,
-        effectiveRate: parseFloat((Math.random() * 2 + 2).toFixed(2)),
-        status: 'Completed',
+        businessName: businessName,
+        status: 'Verified',
       };
-      setAudits([...audits, newAudit]);
+      setAuditResult({ totalSavings: newAudit.savings, businessName: newAudit.businessName, date: newAudit.date });
+      setAudits(prev => [newAudit, ...prev]); // Prepend to Vault
       setLatestAudit(newAudit);
       setIsScanning(false);
       setView('certificate');
@@ -106,12 +112,22 @@ export default function BadgerDen() {
       </Head>
         {/* The rest of the dashboard content remains unchanged */}
         {/* High-end Blurred Header */}
-        <header className="flex items-center justify-between px-8 py-5 bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 shadow-lg">
+        <header className="flex items-center justify-between px-8 py-5 bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 shadow-lg mt-8">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Copper Badger Logo" className="h-10 w-auto" />
             <span className="text-2xl font-black tracking-tight" style={{ color: '#F29C1F' }}>The Badger Den</span>
           </div>
-          <button className="rounded-full px-5 py-2 font-bold text-sm bg-zinc-800/80 text-slate-200 border border-zinc-700 hover:bg-zinc-900/80 transition-all shadow" style={{letterSpacing:2}}>
+          <button
+            className="rounded-full px-5 py-2 font-bold text-sm bg-zinc-800/80 text-slate-200 border border-zinc-700 hover:bg-zinc-900/80 transition-all shadow"
+            style={{letterSpacing:2}}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.clear();
+                sessionStorage.clear();
+              }
+              router.push('/');
+            }}
+          >
             Logout
           </button>
         </header>
@@ -146,6 +162,12 @@ export default function BadgerDen() {
               <div className="text-4xl md:text-5xl font-black mb-1" style={{ color: '#F29C1F' }}>
                 ${totalWaste.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
+              <button
+                className="mt-4 px-6 py-3 rounded-full bg-[#F29C1F] text-zinc-950 font-bold text-base shadow hover:bg-[#D4AF37] transition-all w-full border-2 border-[#F29C1F]"
+                onClick={() => router.push('/#pricing')}
+              >
+                Subscribe to Unlock Full Report
+              </button>
               {showTooltip && (
                 <div className="absolute bottom-2 right-2 bg-zinc-800 text-xs text-amber-400 px-3 py-1 rounded shadow-lg animate-fadeIn">
                   Click to see details
@@ -215,44 +237,30 @@ export default function BadgerDen() {
           {audits
             .filter((audit) => {
               if (activeFilter === "All") return true;
-              if (activeFilter === "Verified") return audit.status === "Savings Verified";
+              if (activeFilter === "Verified") return audit.status === "Verified";
               if (activeFilter === "In Progress") return audit.status === "In Progress";
               return true;
             })
-            .map((audit, idx) => {
-              // Free Audit: show filename and date, blur/lock savings
-              const isFreeAudit = audit && audit.fileName && audit.date && (!audit.status || audit.status === 'Free Audit');
-              return (
-                <div
-                  key={audit.id || idx}
-                  className={
-                    "grid grid-cols-4 items-center hover:bg-zinc-800/30 transition-colors" +
-                    (highlightedRows ? " animate-copperPulse bg-[#D4AF37]/10" : "")
-                  }
-                >
-                  <div className="p-4 text-zinc-400">{audit.date}</div>
-                  <div className="p-4 font-medium">
-                    {audit.fileName ? getStatementMonth(audit.fileName, audit.date) : '—'}
-                  </div>
-                  <div className="p-4 font-bold relative" style={{ color: "#F29C1F" }}>
-                    {isFreeAudit ? (
-                      <span className="blur-sm select-none cursor-not-allowed" title="Upgrade to unlock savings">Locked
-                        <span className="absolute left-1/2 -translate-x-1/2 mt-1 w-40 bg-black/90 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity duration-200 shadow-lg">
-                          Upgrade to unlock your savings
-                        </span>
-                      </span>
-                    ) : (
-                      <>${audit.savings?.toLocaleString?.() ?? '—'}</>
-                    )}
-                  </div>
-                  <div className="p-4 flex gap-2 items-center">
-                    <span className="inline-flex items-center justify-center whitespace-nowrap min-w-[120px] border px-3 py-1 rounded-full text-xs font-medium border-zinc-400 text-zinc-400 bg-zinc-400/10">
-                      {isFreeAudit ? 'Free Audit' : audit.status || '—'}
-                    </span>
-                  </div>
+            .map((audit, idx) => (
+              <div
+                key={audit.id || idx}
+                className={
+                  "grid grid-cols-4 items-center hover:bg-zinc-800/30 transition-colors" +
+                  (highlightedRows ? " animate-copperPulse bg-[#D4AF37]/10" : "")
+                }
+              >
+                <div className="p-4 text-zinc-400">{audit.date}</div>
+                <div className="p-4 font-medium">{audit.businessName || businessName}</div>
+                <div className="p-4 font-bold" style={{ color: "#F29C1F" }}>
+                  ${audit.savings?.toLocaleString?.() ?? '—'}
                 </div>
-              );
-            })}
+                <div className="p-4 flex gap-2 items-center">
+                  <span className="inline-flex items-center justify-center whitespace-nowrap min-w-[120px] border px-3 py-1 rounded-full text-xs font-medium border-zinc-400 text-zinc-400 bg-zinc-400/10">
+                    {audit.status || '—'}
+                  </span>
+                </div>
+              </div>
+            ))}
           {/* Highlight state hooks moved to top-level */}
           <style>{`
             @keyframes copperPulse {
