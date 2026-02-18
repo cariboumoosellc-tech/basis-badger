@@ -34,7 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <header className="w-full flex items-center gap-3 px-6 py-4 border-b border-zinc-900 bg-[#0D0D0D] mb-6">
+        <header className="w-full flex items-center gap-3 px-6 py-4 bg-[#0D0D0D] mb-6">
           <Image src="/logo.png" alt="Basis Badger Logo" width={40} height={40} />
           <span className="text-gray-100 font-bold text-lg tracking-tight" style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}>Basis Badger</span>
         </header>

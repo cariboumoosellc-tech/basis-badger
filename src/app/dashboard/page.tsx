@@ -128,7 +128,7 @@ export default function BadgerDen() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
-    <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24 pt-32">
+    <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-24">
       {/* ...existing code... */}
     </div>
       <Head>

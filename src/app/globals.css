@@ -10,7 +10,7 @@
     display: none !important;
   }
   body, html {
-    background: #fff !important;
+    background: #0D0D0D !important;
     color: #000 !important;
   }
   main, .print\:bg-white {
@@ -65,7 +65,7 @@
 }
 
 body {
-  background: var(--background);
+  background: #0D0D0D !important;
   color: var(--foreground);
   font-family: 'Geist', 'Inter', Arial, Helvetica, sans-serif;
   scroll-behavior: smooth;
