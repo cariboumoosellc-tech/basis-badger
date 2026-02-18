@@ -47,12 +47,10 @@ export default function BadgerDen() {
       setUserEmail(localStorage.getItem('user_email'));
     }
   }, []);
-  // Superuser override: admin is always pro or guest audit is true
-  // Assume user object and guestAudit are available in scope
-  const guestAudit = typeof window !== 'undefined' ? document.cookie.includes('guest_audit=true') : false;
+  // Superuser override: admin is always pro
   const user = { email: userEmail };
   const status = userTier;
-  const isPro = user?.email === 'basisbadgerllc@gmail.com' || status === 'pro' || guestAudit === true;
+  const isPro = user?.email === 'basisbadgerllc@gmail.com' || status === 'pro';
   // Always set isPro true for admin
   React.useEffect(() => {
     if (userEmail === 'basisbadgerllc@gmail.com') {
@@ -74,6 +72,12 @@ export default function BadgerDen() {
   const totalWaste = Math.round(monthlyWaste * 12 * 100) / 100; // annualized, rounded to 2 decimals
   const verifiedSavings = audits.filter((a: any) => a.status === 'Savings Verified').reduce((sum: number, a: any) => sum + a.savings, 0);
   const activeNegotiations = audits.filter((a: any) => a.status === 'Audit Dispatched' || a.status === 'In Progress').length;
+
+  // Blurring logic for non-pro users (guests)
+  function getReasoningText(reasoning: string) {
+    if (isPro) return reasoning;
+    return <span style={{ filter: 'blur(4px)', userSelect: 'none' }}>Sign up to see why</span>;
+  }
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
