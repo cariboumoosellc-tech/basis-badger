@@ -127,7 +127,7 @@ export default function BadgerDen() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0">
+    <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
       <Head>
         <title>The Badger Den</title>
         <meta name="description" content="The Badger Den: Forensic Audit Portal" />

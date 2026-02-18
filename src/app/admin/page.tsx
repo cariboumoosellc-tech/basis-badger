@@ -1,17 +1,29 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ShieldAlert, Download, ArrowUpDown, TrendingDown } from 'lucide-react';
 
 // Mock data for the "God View" - Replace with real DB fetch later
 const MOCK_LEADS = [
-  { id: '1', createdAt: '2026-02-15T10:00:00Z', merchantName: 'Jane Doe', company: 'Acme Corp', phone: '(555) 123-4567', businessEmail: 'jane@acme.com', processorName: 'Fiserv', monthlyVolume: 45000, wasteAmount: 850, redFlags: 4, effectiveRate: 3.8 },
-  { id: '2', createdAt: '2026-02-16T14:20:00Z', merchantName: 'John Doe', company: 'Acme Corp', phone: '(555) 987-6543', businessEmail: 'john@acme.com', processorName: 'Chase', monthlyVolume: 120000, wasteAmount: 2100, redFlags: 7, effectiveRate: 4.1 },
-  { id: '3', createdAt: '2026-02-17T08:45:00Z', merchantName: 'Alex Lee', company: 'Acme Corp', phone: '(555) 000-0000', businessEmail: 'alex@acme.com', processorName: 'Stripe', monthlyVolume: 15000, wasteAmount: 120, redFlags: 2, effectiveRate: 2.9 },
+  { id: '1', createdAt: '2026-02-15T10:00:00Z', merchantName: 'Jane Doe', company: 'Acme Corp', phone: '(555) 123-4567', businessEmail: 'jane@acme.com', processorName: 'Fiserv', monthlyVolume: 45000, wasteAmount: 850, redFlags: 4, effectiveRate: 3.8, is_pro: false },
+  { id: '2', createdAt: '2026-02-16T14:20:00Z', merchantName: 'John Doe', company: 'Acme Corp', phone: '(555) 987-6543', businessEmail: 'john@acme.com', processorName: 'Chase', monthlyVolume: 120000, wasteAmount: 2100, redFlags: 7, effectiveRate: 4.1, is_pro: false },
+  { id: '3', createdAt: '2026-02-17T08:45:00Z', merchantName: 'Alex Lee', company: 'Acme Corp', phone: '(555) 000-0000', businessEmail: 'alex@acme.com', processorName: 'Stripe', monthlyVolume: 15000, wasteAmount: 120, redFlags: 2, effectiveRate: 2.9, is_pro: true },
+  { id: '4', createdAt: '2026-01-01T08:00:00Z', merchantName: 'Head Badger', company: 'Basis Badger', phone: '(555) 111-2222', businessEmail: 'basisbadgerllc@gmail.com', processorName: 'Stripe', monthlyVolume: 100000, wasteAmount: 5000, redFlags: 10, effectiveRate: 2.5, is_pro: true },
 ];
 
-export default function AdminDashboard() {
-  const [leads] = useState(MOCK_LEADS);
+  const [leads, setLeads] = useState(MOCK_LEADS);
+  const [user, setUser] = useState<{ email: string } | null>(null);
+  const router = useRouter();
+    // Restrict access to head badger only
+    useEffect(() => {
+      // Simulate auth fetch; replace with real auth context/session
+      const loggedInUser = { email: typeof window !== 'undefined' ? localStorage.getItem('user_email') : null };
+      setUser(loggedInUser);
+      if (loggedInUser.email !== "basisbadgerllc@gmail.com") {
+        router.replace("/");
+      }
+    }, [router]);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   // 1. Aggregated Intelligence (The "Exit Stats")
@@ -52,6 +64,9 @@ export default function AdminDashboard() {
     window.open(encodeURI(csvContent));
   };
 
+  if (!user || user.email !== "basisbadgerllc@gmail.com") {
+    return null;
+  }
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white font-sans p-8">
       <main className="max-w-7xl mx-auto">
@@ -91,6 +106,8 @@ export default function AdminDashboard() {
                 <TableHead label="Mo. Volume" onClick={() => requestSort('monthlyVolume')} />
                 <TableHead label="Annual Waste" onClick={() => requestSort('wasteAmount')} />
                 <TableHead label="Red Flags" onClick={() => requestSort('redFlags')} />
+                <TableHead label="Subscription" onClick={() => requestSort('is_pro')} />
+                <TableHead label="" onClick={() => {}} />
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
@@ -107,6 +124,25 @@ export default function AdminDashboard() {
                     <span className="bg-red-500/10 text-red-500 px-2 py-1 rounded text-xs font-bold border border-red-500/20">
                       {lead.redFlags} FLAGS
                     </span>
+                  </td>
+                  <td className="p-4">
+                    {lead.is_pro ? (
+                      <span className="text-green-400 font-bold">Pro</span>
+                    ) : (
+                      <span className="text-zinc-400">Free</span>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    {!lead.is_pro && (
+                      <button
+                        className="px-4 py-2 rounded-full bg-amber-500 text-zinc-900 font-bold hover:bg-amber-400 transition-all shadow"
+                        onClick={() => {
+                          setLeads(leads => leads.map(l => l.id === lead.id ? { ...l, is_pro: true } : l));
+                        }}
+                      >
+                        Grant Forensic Access
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
