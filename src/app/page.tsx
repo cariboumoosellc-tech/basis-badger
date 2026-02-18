@@ -1,6 +1,9 @@
 
 "use client";
 import { useRouter } from "next/navigation";
+// @ts-ignore
+let signOutGlobal: ((opts: any) => Promise<void>) | undefined = undefined;
+try { signOutGlobal = require('next-auth/react').signOut; } catch {}
 
 import { useEffect, useMemo, useState } from "react";
 import { useRef } from "react";
@@ -30,8 +33,8 @@ export default function Home() {
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();
-        if (typeof window !== 'undefined' && typeof window.signOut === 'function') {
-          await window.signOut({ callbackUrl: '/', redirect: true });
+        if (typeof signOutGlobal === 'function') {
+          await signOutGlobal({ callbackUrl: '/', redirect: true });
         } else {
           router.replace('/');
         }

@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+// @ts-ignore
+let signOutGlobal: ((opts: any) => Promise<void>) | undefined = undefined;
+try { signOutGlobal = require('next-auth/react').signOut; } catch {}
 import CertificateOfFindingsSneakPeek from "@/components/CertificateOfFindingsSneakPeek";
 import CertificateOfFindings from "@/components/CertificateOfFindings";
 import Head from "next/head";
@@ -141,8 +144,8 @@ export default function BadgerDen() {
                   if (typeof window !== 'undefined') {
                     localStorage.clear();
                     sessionStorage.clear();
-                    if (typeof window !== 'undefined' && typeof window.signOut === 'function') {
-                      await window.signOut({ callbackUrl: '/', redirect: true });
+                    if (typeof signOutGlobal === 'function') {
+                      await signOutGlobal({ callbackUrl: '/', redirect: true });
                     } else {
                       window.location.href = '/';
                     }
