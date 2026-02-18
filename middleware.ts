@@ -8,13 +8,15 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Guest bypass
-  if (req.cookies.get('guest_audit')?.value === 'true') {
+  // 2. Guest bypass (check for cookie existence before user session)
+  const hasGuestCookie = req.cookies.has('guest_audit');
+  if (hasGuestCookie) {
     return NextResponse.next();
   }
 
   // 3. Admin bypass
-  if (req.cookies.get('user_email')?.value === 'basisbadgerllc@gmail.com') {
+  const isAdmin = req.cookies.get('user_email')?.value === 'basisbadgerllc@gmail.com';
+  if (isAdmin) {
     return NextResponse.next();
   }
 
