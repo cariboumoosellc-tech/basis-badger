@@ -71,6 +71,21 @@ export default function Home() {
   };
 
   const router = useRouter();
+  // Track login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsLoggedIn(!!localStorage.getItem('user_email'));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('badger-latest-audit');
+    setIsLoggedIn(false);
+    router.push('/');
+  };
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white relative overflow-x-hidden">
       {/* Fixed Site Header */}
@@ -81,21 +96,35 @@ export default function Home() {
           <img src="/logo.png" alt="Basis Badger Logo" className="h-12 w-auto relative z-10" />
         </div>
         {/* Center Nav Links */}
-        <button
-          className="ml-4 px-6 py-2 rounded bg-[#F29C1F] text-zinc-900 font-bold hover:bg-[#FFD700] transition-all"
-          onClick={() => router.push('/login')}
-        >
-          Sign In
-        </button>
         <nav className="flex-1 flex justify-center gap-8">
           <a href="/#how-it-works" className="text-sm font-semibold text-slate-300 hover:text-[#F29C1F] transition-all">How it Works</a>
           <a href="/#pricing" className="text-sm font-semibold text-slate-300 hover:text-[#F29C1F] transition-all">Pricing</a>
         </nav>
-        {/* Sign In Far Right */}
-        <div className="flex-1 flex justify-end">
-          <a href="/dashboard" className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm">
-            Sign In
-          </a>
+        {/* Auth Buttons Far Right */}
+        <div className="flex-1 flex justify-end gap-2">
+          {isLoggedIn ? (
+            <>
+              <a
+                href="/dashboard"
+                className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+              >
+                Dashboard
+              </a>
+              <button
+                className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+              onClick={() => router.push('/login')}
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pt-32 pb-20 relative">
