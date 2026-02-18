@@ -22,6 +22,7 @@ interface LiveAlert {
 
 interface ForensicInsightsProps {
   userTier: "free" | "pro";
+  isPro?: boolean;
   redFlags?: RedFlag[];
   benchmarks?: Benchmark[];
   liveAlerts?: LiveAlert[];
@@ -30,6 +31,7 @@ interface ForensicInsightsProps {
 
 const ForensicInsights: React.FC<ForensicInsightsProps> = ({
   userTier,
+  isPro = false,
   redFlags = [
     { name: "PCI Non-Compliance", amount: 29.95 },
     { name: "Interchange Padding", amount: 14.2 },
@@ -78,7 +80,7 @@ const ForensicInsights: React.FC<ForensicInsightsProps> = ({
               <li key={i} className="flex flex-col gap-0 mb-2">
                 <div className="flex items-center gap-2 text-base">
                   <span className="text-red-400">🚩</span>
-                  {userTier === 'pro' ? (
+                  {isPro ? (
                     <>
                       <span>{flag.name}</span>:
                       <span className="font-bold text-[#D4AF37]">${flag.amount.toFixed(2)}</span>
@@ -91,7 +93,11 @@ const ForensicInsights: React.FC<ForensicInsightsProps> = ({
                   )}
                 </div>
                 {flag.reasoning && (
-                  <div className="text-zinc-500 text-xs ml-7 mt-0.5">{flag.reasoning}</div>
+                  isPro ? (
+                    <div className="text-zinc-500 text-xs ml-7 mt-0.5">{flag.reasoning}</div>
+                  ) : (
+                    <div className="text-zinc-500 text-xs ml-7 mt-0.5 blur-sm select-none">Upgrade to Pro to view forensic reasoning</div>
+                  )
                 )}
               </li>
             );

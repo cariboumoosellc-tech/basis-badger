@@ -28,8 +28,11 @@ export default function Home() {
 
     function handleLogout() {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('user_email');
-        router.replace('/login');
+        localStorage.clear();
+        sessionStorage.clear();
+        // Add any auth signOut() here if using NextAuth/Supabase
+        router.replace('/');
+        setIsLoggedIn(false);
       }
     }
   const [status, setStatus] = useState<AuditStatus>("idle");
@@ -76,18 +79,29 @@ export default function Home() {
         </nav>
         {/* Auth Buttons Far Right */}
         <div className="flex-1 flex justify-end gap-2">
-          <a
-            href="/dashboard"
-            className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
-          >
-            Dashboard
-          </a>
-          <button
-            className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
+          {isLoggedIn ? (
+            <>
+              <a
+                href="/dashboard"
+                className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+              >
+                Dashboard
+              </a>
+              <button
+                className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <a
+              href="/login"
+              className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+            >
+              Sign In
+            </a>
+          )}
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pt-32 pb-20 relative">

@@ -37,6 +37,15 @@ export default function BadgerDen() {
   const [audits, setAudits] = useState<any[]>([]);
   const [latestAudit, setLatestAudit] = useState<any | null>(null);
   const [userTier, setUserTier] = useState<'free' | 'pro'>('free');
+  // Get user email for pro/admin logic
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUserEmail(localStorage.getItem('user_email'));
+    }
+  }, []);
+  // Superuser override: admin is always pro
+  const isPro = userEmail === 'basisbadgerllc@gmail.com' || userTier === 'pro';
   const [highlightedRows, setHighlightedRows] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
@@ -124,6 +133,7 @@ export default function BadgerDen() {
                   if (typeof window !== 'undefined') {
                     localStorage.clear();
                     sessionStorage.clear();
+                    // Add any auth signOut() here if using NextAuth/Supabase
                     window.location.href = '/';
                   }
                 }}
@@ -179,6 +189,7 @@ export default function BadgerDen() {
             <div className="flex-1 flex flex-col items-center justify-center">
               <ForensicInsights
                 userTier={userTier}
+                isPro={isPro}
                 redFlags={redFlags}
                 onViewCertificate={() => setView('certificate')}
               />
