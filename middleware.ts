@@ -8,26 +8,18 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const userEmail = req.cookies.get('user_email')?.value;
-  const guestAudit = req.cookies.get('guest_audit')?.value;
-
-  // 2. Admin bypass: allow all
-  if (userEmail === 'basisbadgerllc@gmail.com') {
+  // 2. Guest bypass
+  if (req.cookies.get('guest_audit')?.value === 'true') {
     return NextResponse.next();
   }
 
-  // 3. Guest audit: allow /dashboard
-  if (pathname.startsWith('/dashboard') && guestAudit === 'true') {
+  // 3. Admin bypass
+  if (req.cookies.get('user_email')?.value === 'basisbadgerllc@gmail.com') {
     return NextResponse.next();
   }
 
-  // 4. Guard: Only redirect to /login if accessing /dashboard or /admin and not logged in or guest
-  if ((pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) && !userEmail && guestAudit !== 'true') {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-
-  // 5. All other routes: allow
-  return NextResponse.next();
+  // 4. Catch-all: redirect to login
+  return NextResponse.redirect(new URL('/login', req.url));
 }
 
 export const config = {
