@@ -24,11 +24,11 @@ function getStatementMonth(fileName: string, date: string) {
 const MOCK_AUDITS = [];
 
 export default function BadgerDen() {
+  // Red flag/audit result state for ROI hook
+  const [auditResult, setAuditResult] = useState<{ totalSavings: number, businessName: string, date: string } | null>(null);
+  const router = useRouter();
   // Check for redirect from lead and load audit if present
   const [audits, setAudits] = useState(() => {
-      // Red flag/audit result state for ROI hook
-      const [auditResult, setAuditResult] = useState<{ totalSavings: number, businessName: string, date: string } | null>(null);
-      const router = useRouter();
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('badger-latest-audit');
       if (stored) {
@@ -67,8 +67,8 @@ export default function BadgerDen() {
   const [activeFilter, setActiveFilter] = useState('All');
   // Branding: logo and title always visible
   // Metrics
-  // Use auditResult for Identified Waste (ROI hook)
-  const totalWaste = auditResult?.totalSavings ?? audits.reduce((sum, a) => sum + a.savings, 0);
+  // Use auditResult for Identified Waste (ROI hook), default to 0 if no audits
+  const totalWaste = auditResult?.totalSavings ?? (audits.length > 0 ? audits.reduce((sum, a) => sum + a.savings, 0) : 0);
   const verifiedSavings = audits.filter(a => a.status === 'Savings Verified').reduce((sum, a) => sum + a.savings, 0);
     const [showVerifyModal, setShowVerifyModal] = useState<{ open: boolean, audit: any | null }>({ open: false, audit: null });
     const [showConfetti, setShowConfetti] = useState(false);
