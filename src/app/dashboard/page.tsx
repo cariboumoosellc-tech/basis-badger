@@ -128,8 +128,17 @@ export default function BadgerDen() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
-    <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-24">
-      {/* ...existing code... */}
+    <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-20">
+      {auditResult === null ? (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <h2 className="text-2xl font-bold mb-4">No Audit Found</h2>
+          <p className="text-zinc-400 mb-8">Please upload a statement to begin your forensic audit.</p>
+        </div>
+      ) : (
+        <>
+          {/* ...existing dashboard content... */}
+        </>
+      )}
     </div>
       <Head>
         <title>The Badger Den</title>
@@ -149,11 +158,8 @@ export default function BadgerDen() {
               if (typeof window !== 'undefined') {
                 localStorage.clear();
                 sessionStorage.clear();
-                document.cookie.split(';').forEach(c => {
-                  document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
-                });
+                window.location.href = '/';
               }
-              router.push('/');
             }}
           >
             Logout

@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Download, ArrowUpDown, TrendingDown } from "lucide-react";
 
-// Mock data for the "God View" - Replace with real DB fetch later
 const MOCK_LEADS = [
   { id: '1', createdAt: '2026-02-15T10:00:00Z', merchantName: 'Jane Doe', company: 'Acme Corp', phone: '(555) 123-4567', businessEmail: 'jane@acme.com', processorName: 'Fiserv', monthlyVolume: 45000, wasteAmount: 850, redFlags: 4, effectiveRate: 3.8, is_pro: false },
   { id: '2', createdAt: '2026-02-16T14:20:00Z', merchantName: 'John Doe', company: 'Acme Corp', phone: '(555) 987-6543', businessEmail: 'john@acme.com', processorName: 'Chase', monthlyVolume: 120000, wasteAmount: 2100, redFlags: 7, effectiveRate: 4.1, is_pro: false },
@@ -16,7 +15,6 @@ export default function AdminPage() {
   const [leads, setLeads] = useState(MOCK_LEADS);
   const [user, setUser] = useState<{ email: string | null } | null>(null);
   const router = useRouter();
-  // Restrict access to head badger only
   useEffect(() => {
     const loggedInUser = { email: typeof window !== 'undefined' ? localStorage.getItem('user_email') : null };
     setUser(loggedInUser);
@@ -26,11 +24,9 @@ export default function AdminPage() {
   }, [router]);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
-  // 1. Aggregated Intelligence (The "Exit Stats")
   const stats = useMemo(() => {
     const totalWaste = leads.reduce((sum, lead) => sum + (lead.wasteAmount || 0), 0);
     const avgRate = (leads.reduce((sum, lead) => sum + (lead.effectiveRate || 0), 0) / (leads.length || 1)).toFixed(2);
-    // Find the most frequent "Predator"
     const processors = leads.map(l => l.processorName);
     const topPredator = processors.sort((a,b) =>
       processors.filter(v => v===a).length - processors.filter(v=>v===b).length
@@ -38,7 +34,6 @@ export default function AdminPage() {
     return { totalWaste, avgRate, topPredator };
   }, [leads]);
 
-  // 2. Sorting Logic
   const sortedLeads = useMemo(() => {
     let sortableLeads = [...leads];
     if (sortConfig !== null) {
@@ -67,10 +62,10 @@ export default function AdminPage() {
   if (!user || user.email !== "basisbadgerllc@gmail.com") {
     return null;
   }
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white font-sans p-8">
       <main className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-end mb-12">
           <div className="flex items-center gap-3">
             <img src="/badger.svg" alt="Basis Badger Logo" width={36} height={36} />
@@ -85,15 +80,11 @@ export default function AdminPage() {
             <Download size={16} /> EXPORT CSV
           </button>
         </div>
-
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <StatCard title="Total Waste Exposed" value={`$${stats.totalWaste.toLocaleString()}`} icon={<TrendingDown className="text-red-500" />} accent="#F29C1F" />
           <StatCard title="Avg. Effective Rate" value={`${stats.avgRate}%`} icon={<ShieldAlert style={{ color: '#F29C1F' }} />} accent="#F29C1F" />
           <StatCard title="Top Predator" value={stats.topPredator || 'N/A'} icon={<ShieldAlert style={{ color: '#F29C1F' }} />} accent="#F29C1F" />
         </div>
-
-        {/* Leads Table */}
         <div className="bg-[#1A1A1A] border border-zinc-800 rounded-lg overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -154,7 +145,6 @@ export default function AdminPage() {
   );
 }
 
-// Sub-components to keep the main return clean
 function StatCard({ title, value, icon, accent }: { title: string; value: string; icon: React.ReactNode; accent?: string }) {
   return (
     <div className="bg-[#1A1A1A] p-6 border border-zinc-800 rounded-lg shadow-xl">

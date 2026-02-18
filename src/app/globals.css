@@ -9,8 +9,8 @@
   nav, .print\:hidden, .print\:hidden * {
     display: none !important;
   }
-  body, html {
-    background: #0D0D0D !important;
+  html, body {
+    background-color: #0D0D0D !important;
     color: #000 !important;
   }
   main, .print\:bg-white {
