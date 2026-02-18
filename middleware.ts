@@ -1,6 +1,11 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(req: NextRequest) {
+  // 1. Guest audit bypass: allow immediately if guest_audit cookie is set
+  const guestAudit = req.cookies.get('guest_audit')?.value;
+  if (guestAudit === 'true') return NextResponse.next();
+
   const { pathname } = req.nextUrl;
   const isDashboard = pathname.startsWith('/dashboard');
   const isAdmin = pathname.startsWith('/admin');
@@ -9,15 +14,11 @@ export function middleware(req: NextRequest) {
   // Allow all API routes
   if (isApi) return NextResponse.next();
 
-  // Allow dashboard for guest audit if sessionStorage has 'guest_audit' flag
+  // Dashboard: allow admin, logged in, or redirect
   if (isDashboard) {
-    // This is a workaround: Next.js middleware can't access sessionStorage directly.
-    // Instead, check for a cookie or query param set after a free audit.
-    const guestAudit = req.cookies.get('guest_audit')?.value;
     const userEmail = req.cookies.get('user_email')?.value;
     if (userEmail === 'basisbadgerllc@gmail.com') return NextResponse.next(); // admin bypass
     if (userEmail) return NextResponse.next(); // logged in
-    if (guestAudit === 'true') return NextResponse.next(); // allow guest audit
     // Otherwise, redirect to login
     return NextResponse.redirect(new URL('/login', req.url));
   }

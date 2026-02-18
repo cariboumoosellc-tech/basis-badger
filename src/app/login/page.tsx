@@ -1,7 +1,10 @@
 "use client";
 
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+let signIn: any = undefined;
+try { signIn = require('next-auth/react').signIn; } catch {}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -10,7 +13,7 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError("Please enter both email and password.");
@@ -45,6 +48,14 @@ export default function LoginPage() {
         localStorage.setItem("user_email", email);
         localStorage.removeItem("badger-latest-audit");
         router.push("/dashboard");
+      } else if (signIn) {
+        // Fallback: try next-auth signIn if available
+        const res = await signIn('credentials', { email, password, callbackUrl: '/dashboard', redirect: false });
+        if (res?.ok) {
+          router.push("/dashboard");
+        } else {
+          setError("Invalid credentials.");
+        }
       } else {
         setError("Invalid credentials.");
       }

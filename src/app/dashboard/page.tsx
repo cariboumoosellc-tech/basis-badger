@@ -49,6 +49,12 @@ export default function BadgerDen() {
   }, []);
   // Superuser override: admin is always pro
   const isPro = userEmail === 'basisbadgerllc@gmail.com' || userTier === 'pro';
+  // Always set isPro true for admin
+  React.useEffect(() => {
+    if (userEmail === 'basisbadgerllc@gmail.com') {
+      setUserTier('pro');
+    }
+  }, [userEmail]);
   const [highlightedRows, setHighlightedRows] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
