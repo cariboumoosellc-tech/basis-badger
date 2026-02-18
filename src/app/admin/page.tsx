@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { ShieldAlert, Download, ArrowUpDown, TrendingDown } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ShieldAlert, Download, ArrowUpDown, TrendingDown } from "lucide-react";
 
 // Mock data for the "God View" - Replace with real DB fetch later
 const MOCK_LEADS = [
@@ -12,18 +12,18 @@ const MOCK_LEADS = [
   { id: '4', createdAt: '2026-01-01T08:00:00Z', merchantName: 'Head Badger', company: 'Basis Badger', phone: '(555) 111-2222', businessEmail: 'basisbadgerllc@gmail.com', processorName: 'Stripe', monthlyVolume: 100000, wasteAmount: 5000, redFlags: 10, effectiveRate: 2.5, is_pro: true },
 ];
 
+export default function AdminPage() {
   const [leads, setLeads] = useState(MOCK_LEADS);
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<{ email: string | null } | null>(null);
   const router = useRouter();
-    // Restrict access to head badger only
-    useEffect(() => {
-      // Simulate auth fetch; replace with real auth context/session
-      const loggedInUser = { email: typeof window !== 'undefined' ? localStorage.getItem('user_email') : null };
-      setUser(loggedInUser);
-      if (loggedInUser.email !== "basisbadgerllc@gmail.com") {
-        router.replace("/");
-      }
-    }, [router]);
+  // Restrict access to head badger only
+  useEffect(() => {
+    const loggedInUser = { email: typeof window !== 'undefined' ? localStorage.getItem('user_email') : null };
+    setUser(loggedInUser);
+    if (loggedInUser.email !== "basisbadgerllc@gmail.com") {
+      router.replace("/");
+    }
+  }, [router]);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
 
   // 1. Aggregated Intelligence (The "Exit Stats")
