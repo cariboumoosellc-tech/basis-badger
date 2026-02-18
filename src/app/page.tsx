@@ -237,11 +237,12 @@ export default function Home() {
                       setQuickAuditStep('scanning');
                       scanningTimeout.current = setTimeout(() => {
                         setShowQuickAudit(false);
-                        // Redirect to /preview with savings param
+                        // Redirect to /preview with savings and issues param
                         const savings = auditData?.summary?.overallScore || 0;
+                        const issues = auditData?.summary?.highRiskCount || 3;
                         const business = auditData?.sourceName || '';
                         const date = auditData?.createdAt || new Date().toISOString().slice(0, 10);
-                        window.location.href = `/preview?savings=${encodeURIComponent(savings)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Audit%20Dispatched`;
+                        window.location.href = `/preview?savings=${encodeURIComponent(savings)}&issues=${encodeURIComponent(issues)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Audit%20Dispatched`;
                       }, 5000);
                     }}
                   >Scan Now</button>
@@ -279,11 +280,12 @@ export default function Home() {
                     status: 'Completed',
                   }));
                 }
-                // Redirect to /preview with savings param
+                // Redirect to /preview with savings and issues param
                 const savings = auditData?.summary?.overallScore || 0;
+                const issues = auditData?.summary?.highRiskCount || 3;
                 const business = auditData?.sourceName || '';
                 const date = auditData?.createdAt || new Date().toISOString().slice(0, 10);
-                window.location.href = `/preview?savings=${encodeURIComponent(savings)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Completed`;
+                window.location.href = `/preview?savings=${encodeURIComponent(savings)}&issues=${encodeURIComponent(issues)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Completed`;
               }}
               modal
             />
