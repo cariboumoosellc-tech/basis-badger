@@ -17,6 +17,21 @@ type AuditStatus = "idle" | "scanning" | "lead" | "completed";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function Home() {
+      function handleFileSelected(file: File) {
+        if (file) {
+          const url = URL.createObjectURL(file);
+          setPreviewUrl(url);
+          setStatus('scanning');
+        }
+      }
+    const router = useRouter();
+
+    function handleLogout() {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user_email');
+        router.replace('/login');
+      }
+    }
   const [status, setStatus] = useState<AuditStatus>("idle");
   const [auditData, setAuditData] = useState<BadgerAudit | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -25,67 +40,37 @@ export default function Home() {
   const isScanning = status === "scanning";
   const isLead = status === "lead";
   const isCompleted = status === "completed";
-  const [pricingMode, setPricingMode] = useState<'annual' | 'monthly'>('annual');
+  const [pricingMode, setPricingMode] = useState<'annual' | 'monthly'>("annual");
   const [showQuickAudit, setShowQuickAudit] = useState(false);
-  const [quickAuditStep, setQuickAuditStep] = useState<'email' | 'upload' | 'scanning'>('email');
+  const [quickAuditStep, setQuickAuditStep] = useState<'email' | 'upload' | 'scanning'>("email");
   const [quickAuditEmail, setQuickAuditEmail] = useState('');
   const [quickAuditFile, setQuickAuditFile] = useState<File | null>(null);
   const scanningTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  const handleFileSelected = async (file: File) => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    setError(null);
-    const localUrl = URL.createObjectURL(file);
-    setPreviewUrl(localUrl);
-    setStatus("scanning");
-    setAuditData(null);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await fetch("/api/audit", {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) throw new Error("Badger lost the scent");
-      const result = await response.json();
-      await delay(2000);
-      setAuditData(result.audit || result); // support both {audit} and direct
-      setStatus("lead");
-    } catch (err) {
-      setStatus("idle");
-      setError("[ERROR] Badger lost the scent. Try again.");
-    }
-  };
-
-  const router = useRouter();
-  // Track login state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsLoggedIn(!!localStorage.getItem('user_email'));
+      const email = localStorage.getItem('user_email');
+      setIsLoggedIn(!!email);
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user_email');
-    localStorage.removeItem('badger-latest-audit');
-    setIsLoggedIn(false);
-    router.push('/');
-  };
+  useEffect(() => {
+    // ...existing effect logic...
+  }, [previewUrl]);
 
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
+        <iframe
+          src="/login"
+          title="Login"
+          className="w-full max-w-md h-[480px] rounded-lg shadow-xl border-2 border-[#F29C1F] bg-zinc-900"
+          style={{ minHeight: 480, background: '#18181b' }}
+        />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white relative overflow-x-hidden">
       {/* Fixed Site Header */}
@@ -102,29 +87,18 @@ export default function Home() {
         </nav>
         {/* Auth Buttons Far Right */}
         <div className="flex-1 flex justify-end gap-2">
-          {isLoggedIn ? (
-            <>
-              <a
-                href="/dashboard"
-                className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
-              >
-                Dashboard
-              </a>
-              <button
-                className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <button
-              className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
-              onClick={() => router.push('/login')}
-            >
-              Sign In
-            </button>
-          )}
+          <a
+            href="/dashboard"
+            className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+          >
+            Dashboard
+          </a>
+          <button
+            className="rounded-full px-5 py-2 text-sm font-bold border border-[#F29C1F] text-[#F29C1F] bg-transparent hover:bg-[#F29C1F]/10 transition-all shadow-sm"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pt-32 pb-20 relative">
@@ -143,7 +117,6 @@ export default function Home() {
             Release the Badger
           </button>
         </section>
-
         {/* How It Works Section */}
         <section id="how-it-works" className="w-full max-w-5xl mx-auto flex flex-col items-center gap-12">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">How It Works</h2>
@@ -165,7 +138,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         {/* Pricing Section */}
         <section id="pricing" className="w-full max-w-xl mx-auto flex flex-col items-center gap-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">Pricing</h2>
@@ -212,7 +184,6 @@ export default function Home() {
             </button>
           </div>
         </section>
-
         {/* Quick Audit Modal */}
         {showQuickAudit && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
@@ -273,7 +244,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
         {/* Upload/Scanner/Lead Modal Logic (hidden, but still functional) */}
         <div className="hidden">
           {status === "idle" ? (
