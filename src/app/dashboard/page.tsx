@@ -8,6 +8,13 @@ import Head from "next/head";
 import Image from "next/image";
 import ForensicInsights from "@/components/ForensicInsights";
 
+// Default red flags for waste calculation
+const DEFAULT_RED_FLAGS = [
+  { name: "PCI Non-Compliance", amount: 29.95 },
+  { name: "Interchange Padding", amount: 14.2 },
+  { name: "Statement Fee", amount: 9.99 },
+];
+
 // Mock user and audit data
 const MOCK_USER = {
   businessName: "Acme Corp",
@@ -67,8 +74,10 @@ export default function BadgerDen() {
   const [activeFilter, setActiveFilter] = useState('All');
   // Branding: logo and title always visible
   // Metrics
-  // Use auditResult for Identified Waste (ROI hook), default to 0 if no audits
-  const totalWaste = auditResult?.totalSavings ?? (audits.length > 0 ? audits.reduce((sum, a) => sum + a.savings, 0) : 0);
+  // Identified Waste: sum red flags and annualize
+  const redFlags = DEFAULT_RED_FLAGS;
+  const monthlyWaste = redFlags.reduce((sum, flag) => sum + flag.amount, 0);
+  const totalWaste = Math.round(monthlyWaste * 12 * 100) / 100; // annualized, rounded to 2 decimals
   const verifiedSavings = audits.filter(a => a.status === 'Savings Verified').reduce((sum, a) => sum + a.savings, 0);
     const [showVerifyModal, setShowVerifyModal] = useState<{ open: boolean, audit: any | null }>({ open: false, audit: null });
     const [showConfetti, setShowConfetti] = useState(false);
@@ -112,14 +121,14 @@ export default function BadgerDen() {
       </Head>
         {/* The rest of the dashboard content remains unchanged */}
         {/* High-end Blurred Header */}
-        <header className="flex items-center justify-between px-8 py-5 bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 shadow-lg mt-8">
+        <header className="flex items-center justify-between px-8 py-5 bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 shadow-lg mt-8 mb-8">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Copper Badger Logo" className="h-10 w-auto" />
             <span className="text-2xl font-black tracking-tight" style={{ color: '#F29C1F' }}>The Badger Den</span>
           </div>
           <button
-            className="rounded-full px-5 py-2 font-bold text-sm bg-zinc-800/80 text-slate-200 border border-zinc-700 hover:bg-zinc-900/80 transition-all shadow"
-            style={{letterSpacing:2}}
+            className="rounded-full px-5 py-2 font-bold text-sm bg-[#FFD700] text-zinc-900 border border-[#FFD700] hover:bg-[#F29C1F] hover:text-zinc-950 transition-all shadow-lg"
+            style={{letterSpacing:2, boxShadow:'0 0 12px 2px #FFD70088'}} 
             onClick={() => {
               if (typeof window !== 'undefined') {
                 localStorage.clear();
@@ -163,7 +172,8 @@ export default function BadgerDen() {
                 ${totalWaste.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <button
-                className="mt-4 px-6 py-3 rounded-full bg-[#F29C1F] text-zinc-950 font-bold text-base shadow hover:bg-[#D4AF37] transition-all w-full border-2 border-[#F29C1F]"
+                className="mt-4 px-6 py-3 rounded-full bg-[#FFD700] text-zinc-950 font-extrabold text-lg shadow-lg hover:bg-[#F29C1F] transition-all w-full border-2 border-[#FFD700]"
+                style={{ boxShadow: '0 0 16px 2px #FFD70088' }}
                 onClick={() => router.push('/#pricing')}
               >
                 Subscribe to Unlock Full Report
@@ -178,6 +188,7 @@ export default function BadgerDen() {
             <div className="flex-1 flex flex-col items-center justify-center">
               <ForensicInsights
                 userTier={userTier}
+                redFlags={redFlags}
                 onViewCertificate={() => setView('certificate')}
               />
             </div>
@@ -234,33 +245,37 @@ export default function BadgerDen() {
             <div>Potential Savings</div>
             <div>Status</div>
           </div>
-          {audits
-            .filter((audit) => {
-              if (activeFilter === "All") return true;
-              if (activeFilter === "Verified") return audit.status === "Verified";
-              if (activeFilter === "In Progress") return audit.status === "In Progress";
-              return true;
-            })
-            .map((audit, idx) => (
-              <div
-                key={audit.id || idx}
-                className={
-                  "grid grid-cols-4 items-center hover:bg-zinc-800/30 transition-colors" +
-                  (highlightedRows ? " animate-copperPulse bg-[#D4AF37]/10" : "")
-                }
-              >
-                <div className="p-4 text-zinc-400">{audit.date}</div>
-                <div className="p-4 font-medium">{audit.businessName || businessName}</div>
-                <div className="p-4 font-bold" style={{ color: "#F29C1F" }}>
-                  ${audit.savings?.toLocaleString?.() ?? '—'}
+          {audits.length === 0 ? (
+            <div className="text-center text-zinc-500 py-8 text-base">No audits yet. Run a Forensic Audit to see results here.</div>
+          ) : (
+            audits
+              .filter((audit) => {
+                if (activeFilter === "All") return true;
+                if (activeFilter === "Verified") return audit.status === "Verified";
+                if (activeFilter === "In Progress") return audit.status === "In Progress";
+                return true;
+              })
+              .map((audit, idx) => (
+                <div
+                  key={audit.id || idx}
+                  className={
+                    "grid grid-cols-4 items-center hover:bg-zinc-800/30 transition-colors" +
+                    (highlightedRows ? " animate-copperPulse bg-[#D4AF37]/10" : "")
+                  }
+                >
+                  <div className="p-4 text-zinc-400">{audit.createdAt ? new Date(audit.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : getStatementMonth(audit.fileName, audit.date)}</div>
+                  <div className="p-4 font-medium">{audit.sourceName || audit.businessName || businessName}</div>
+                  <div className="p-4 font-bold" style={{ color: "#F29C1F" }}>
+                    ${audit.savings?.toLocaleString?.() ?? '—'}
+                  </div>
+                  <div className="p-4 flex gap-2 items-center">
+                    <span className="inline-flex items-center justify-center whitespace-nowrap min-w-[120px] border px-3 py-1 rounded-full text-xs font-medium border-zinc-400 text-zinc-400 bg-zinc-400/10">
+                      {audit.status || '—'}
+                    </span>
+                  </div>
                 </div>
-                <div className="p-4 flex gap-2 items-center">
-                  <span className="inline-flex items-center justify-center whitespace-nowrap min-w-[120px] border px-3 py-1 rounded-full text-xs font-medium border-zinc-400 text-zinc-400 bg-zinc-400/10">
-                    {audit.status || '—'}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+          )}
           {/* Highlight state hooks moved to top-level */}
           <style>{`
             @keyframes copperPulse {

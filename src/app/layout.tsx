@@ -38,7 +38,7 @@ export default function RootLayout({
           <Image src="/logo.png" alt="Basis Badger Logo" width={40} height={40} />
           <span className="text-gray-100 font-bold text-lg tracking-tight" style={{ fontFamily: 'var(--font-geist-sans, sans-serif)' }}>Basis Badger</span>
         </header>
-        {children}
+        <div className="mt-8">{children}</div>
       </body>
     </html>
   );
