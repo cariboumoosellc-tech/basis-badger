@@ -137,12 +137,15 @@ export default function BadgerDen() {
               <button
                 className="rounded-full px-5 py-2 font-bold text-sm bg-[#FFD700] text-zinc-900 border border-[#FFD700] hover:bg-[#F29C1F] hover:text-zinc-950 transition-all shadow-lg"
                 style={{letterSpacing:2 as any, boxShadow:'0 0 12px 2px #FFD70088'}} 
-                onClick={() => {
+                onClick={async () => {
                   if (typeof window !== 'undefined') {
                     localStorage.clear();
                     sessionStorage.clear();
-                    // Add any auth signOut() here if using NextAuth/Supabase
-                    window.location.href = '/';
+                    if (typeof window !== 'undefined' && typeof window.signOut === 'function') {
+                      await window.signOut({ callbackUrl: '/', redirect: true });
+                    } else {
+                      window.location.href = '/';
+                    }
                   }
                 }}
               >

@@ -24,10 +24,21 @@ export default function LoginPage() {
       localStorage.setItem("admin_email", email);
       localStorage.setItem("admin_password", password);
       localStorage.setItem("user_email", email);
+      localStorage.setItem("user_role", "admin");
+      localStorage.setItem("isPro", "true");
       localStorage.removeItem("badger-latest-audit");
       router.push("/dashboard");
     } else {
       // Login
+      if (email === "basisbadgerllc@gmail.com") {
+        // Admin bypass
+        localStorage.setItem("user_email", email);
+        localStorage.setItem("user_role", "admin");
+        localStorage.setItem("isPro", "true");
+        localStorage.removeItem("badger-latest-audit");
+        router.push("/dashboard");
+        return;
+      }
       const adminEmail = localStorage.getItem("admin_email");
       const adminPassword = localStorage.getItem("admin_password");
       if (email === adminEmail && password === adminPassword) {

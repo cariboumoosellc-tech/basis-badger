@@ -26,12 +26,15 @@ export default function Home() {
       }
     const router = useRouter();
 
-    function handleLogout() {
+    async function handleLogout() {
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();
-        // Add any auth signOut() here if using NextAuth/Supabase
-        router.replace('/');
+        if (typeof window !== 'undefined' && typeof window.signOut === 'function') {
+          await window.signOut({ callbackUrl: '/', redirect: true });
+        } else {
+          router.replace('/');
+        }
         setIsLoggedIn(false);
       }
     }
