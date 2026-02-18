@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRef } from "react";
+import { Archive, FileUp, ScanSearch, Microscope, ShieldAlert, Gavel } from "lucide-react";
 
 import BadgerScanner from "@/components/BadgerScanner";
 import TacticalDashboard from "@/components/TacticalDashboard";
@@ -21,13 +23,12 @@ export default function Home() {
   const isScanning = status === "scanning";
   const isLead = status === "lead";
   const isCompleted = status === "completed";
-
-  const backgroundStyle = useMemo(
-    () => ({
-      background: "radial-gradient(circle at top, #1a1a1a 0%, #0D0D0D 55%)",
-    }),
-    []
-  );
+  const [pricingMode, setPricingMode] = useState<'annual' | 'monthly'>('annual');
+  const [showQuickAudit, setShowQuickAudit] = useState(false);
+  const [quickAuditStep, setQuickAuditStep] = useState<'email' | 'upload' | 'scanning'>('email');
+  const [quickAuditEmail, setQuickAuditEmail] = useState('');
+  const [quickAuditFile, setQuickAuditFile] = useState<File | null>(null);
+  const scanningTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
@@ -70,7 +71,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white relative overflow-x-hidden">
       {/* Fixed Site Header */}
-      <header className="fixed top-0 left-0 right-0 w-full z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 flex items-center px-6 py-4" style={{minHeight:'64px'}}>
+      <header className="den-header fixed top-0 left-0 right-0 w-full z-50 flex items-center px-6 py-4" style={{minHeight:'64px'}}>
         {/* Logo Far Left with Aurora Glow */}
         <div className="flex-1 flex items-center relative">
           <span className="aurora-glow" aria-hidden="true"></span>
@@ -110,17 +111,17 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
             <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center text-center shadow-lg">
-              <div className="mb-4 text-4xl">📤</div>
+              <Archive className="mb-4 text-4xl w-12 h-12 copper-glow" />
               <h3 className="font-bold text-lg mb-2">Phase 1: Upload</h3>
               <p className="text-slate-400">Drop your merchant statement PDF into the Den.</p>
             </div>
             <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center text-center shadow-lg">
-              <div className="mb-4 text-4xl">🔬</div>
+              <ScanSearch className="mb-4 text-4xl w-12 h-12 copper-glow" />
               <h3 className="font-bold text-lg mb-2">Phase 2: Dissect</h3>
               <p className="text-slate-400">Our AI hunts for Interchange plus-plus markup and junk fees.</p>
             </div>
             <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center text-center shadow-lg">
-              <div className="mb-4 text-4xl">⚡️</div>
+              <ShieldAlert className="mb-4 text-4xl w-12 h-12 copper-glow" />
               <h3 className="font-bold text-lg mb-2">Phase 3: Strike</h3>
               <p className="text-slate-400">We generate a 'Certificate of Findings' to force a rate reduction or switch providers.</p>
             </div>
@@ -128,40 +129,112 @@ export default function Home() {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="w-full max-w-4xl mx-auto flex flex-col items-center gap-10">
+        <section id="pricing" className="w-full max-w-xl mx-auto flex flex-col items-center gap-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">Pricing</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-            {/* Annual Plan */}
-            <div className="relative bg-zinc-950 border-2 border-[#F29C1F] rounded-2xl p-8 flex flex-col items-start shadow-xl">
-              <span className="absolute -top-4 left-4 bg-[#F29C1F] text-zinc-950 text-xs font-bold px-4 py-1 rounded-full shadow">Most Popular / Best Value</span>
-              <h3 className="text-xl font-bold mb-1">Pro Badger (Annual)</h3>
-              <div className="flex items-end gap-2 mb-2">
-                <span className="text-4xl font-black">$180</span>
-                <span className="text-base text-slate-400 font-semibold">/ year</span>
-              </div>
+          {/* Toggle Switch */}
+          <div className="flex items-center gap-4 mb-4">
+            <span className={`font-bold text-sm ${pricingMode==='annual' ? 'text-[#F29C1F]' : 'text-slate-400'}`}>Annual</span>
+            <button
+              className={`relative w-14 h-8 bg-zinc-800 rounded-full border-2 border-zinc-700 flex items-center transition-colors duration-200 focus:outline-none`}
+              onClick={() => setPricingMode(pricingMode === 'annual' ? 'monthly' : 'annual')}
+              aria-label="Toggle pricing mode"
+            >
+              <span className={`absolute left-1 top-1 w-6 h-6 rounded-full bg-[#F29C1F] shadow transition-transform duration-200 ${pricingMode==='annual' ? '' : 'translate-x-6'}`}></span>
+            </button>
+            <span className={`font-bold text-sm ${pricingMode==='monthly' ? 'text-[#F29C1F]' : 'text-slate-400'}`}>Monthly</span>
+          </div>
+          {/* Single Pricing Card */}
+          <div className="relative bg-zinc-950 border-2 border-[#F29C1F] rounded-2xl p-10 flex flex-col items-center shadow-xl w-full max-w-md">
+            {pricingMode === 'annual' && (
+              <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#F29C1F] text-zinc-950 text-xs font-bold px-4 py-1 rounded-full shadow">Most Popular / Best Value</span>
+            )}
+            <h3 className="text-xl font-bold mb-1">Tactical Dashboard</h3>
+            <div className="flex items-end gap-2 mb-2">
+              <span className="text-4xl font-black">
+                {pricingMode === 'annual' ? '$180' : '$20'}
+              </span>
+              <span className="text-base text-slate-400 font-semibold">
+                {pricingMode === 'annual' ? '/ year' : '/ month'}
+              </span>
+            </div>
+            {pricingMode === 'annual' && (
               <div className="text-sm text-slate-400 mb-2">($15 per month)</div>
-              <ul className="mb-4 space-y-1 text-slate-200">
-                <li>✔️ Unlimited Audits</li>
-                <li>✔️ Full Forensic Reports</li>
-                <li>✔️ 24/7 Monitoring</li>
-              </ul>
-              <button className="mt-auto px-6 py-2 rounded-full bg-[#F29C1F] text-zinc-950 font-bold shadow hover:bg-[#D4AF37] transition-all w-full">Get Pro Badger</button>
-            </div>
-            {/* Monthly Plan */}
-            <div className="bg-zinc-950 border-2 border-zinc-800 rounded-2xl p-8 flex flex-col items-start shadow-xl">
-              <h3 className="text-xl font-bold mb-1">Tactical (Monthly)</h3>
-              <div className="flex items-end gap-2 mb-2">
-                <span className="text-4xl font-black">$20</span>
-                <span className="text-base text-slate-400 font-semibold">/ month</span>
-              </div>
-              <ul className="mb-4 space-y-1 text-slate-200">
-                <li>✔️ Single Statement Audits</li>
-                <li>✔️ Basic Fee Detection</li>
-              </ul>
-              <button className="mt-auto px-6 py-2 rounded-full bg-zinc-800 text-[#F29C1F] font-bold border border-[#F29C1F] shadow hover:bg-[#F29C1F] hover:text-zinc-950 transition-all w-full">Get Tactical</button>
-            </div>
+            )}
+            <ul className="mb-4 space-y-1 text-slate-200 text-center">
+              <li>✔️ Full Forensic Audits</li>
+              <li>✔️ Interchange++ Detection</li>
+              <li>✔️ Strike Report Generation</li>
+            </ul>
+            <button className="mt-2 px-8 py-3 rounded-full bg-[#F29C1F] text-zinc-950 font-bold shadow hover:bg-[#D4AF37] transition-all w-full">Get Started</button>
+            <button
+              className="mt-4 text-sm text-[#F29C1F] underline underline-offset-2 hover:text-[#D4AF37] transition-all"
+              onClick={() => { setShowQuickAudit(true); setQuickAuditStep('email'); setQuickAuditEmail(''); setQuickAuditFile(null); }}
+            >
+              Just want a sneak peek? Try a Free Audit
+            </button>
           </div>
         </section>
+
+        {/* Quick Audit Modal */}
+        {showQuickAudit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center relative">
+              <button className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-200 text-2xl font-bold" onClick={() => setShowQuickAudit(false)} aria-label="Close">×</button>
+              {quickAuditStep === 'email' && (
+                <>
+                  <h3 className="text-xl font-bold mb-2">Try a Free Audit</h3>
+                  <p className="text-slate-400 mb-4 text-center">Enter your email to get started:</p>
+                  <input
+                    type="email"
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 mb-4 text-white focus:outline-none focus:ring-2 focus:ring-[#F29C1F]"
+                    placeholder="you@email.com"
+                    value={quickAuditEmail}
+                    onChange={e => setQuickAuditEmail(e.target.value)}
+                  />
+                  <button
+                    className="w-full rounded-full bg-[#F29C1F] text-zinc-950 font-bold py-3 hover:bg-[#D4AF37] transition-all"
+                    disabled={!quickAuditEmail || !quickAuditEmail.includes('@')}
+                    onClick={() => setQuickAuditStep('upload')}
+                  >Continue</button>
+                </>
+              )}
+              {quickAuditStep === 'upload' && (
+                <>
+                  <h3 className="text-xl font-bold mb-2">Upload Your Statement</h3>
+                  <p className="text-slate-400 mb-4 text-center">PDF only. No spam, ever.</p>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="mb-4"
+                    onChange={e => {
+                      if (e.target.files && e.target.files[0]) {
+                        setQuickAuditFile(e.target.files[0]);
+                      }
+                    }}
+                  />
+                  <button
+                    className="w-full rounded-full bg-[#F29C1F] text-zinc-950 font-bold py-3 hover:bg-[#D4AF37] transition-all"
+                    disabled={!quickAuditFile}
+                    onClick={() => {
+                      setQuickAuditStep('scanning');
+                      scanningTimeout.current = setTimeout(() => {
+                        setShowQuickAudit(false);
+                        window.location.href = '/dashboard?from=lead';
+                      }, 5000);
+                    }}
+                  >Scan Now</button>
+                </>
+              )}
+              {quickAuditStep === 'scanning' && (
+                <>
+                  <h3 className="text-xl font-bold mb-4">Scanning...</h3>
+                  <div className="w-20 h-20 rounded-full border-4 border-[#F29C1F] border-t-transparent animate-spin mb-4 mx-auto"></div>
+                  <p className="text-slate-400 text-center">The Badger is analyzing your statement. This will only take a moment.</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Upload/Scanner/Lead Modal Logic (hidden, but still functional) */}
         <div className="hidden">
