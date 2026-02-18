@@ -31,6 +31,15 @@ function getStatementMonth(fileName: string, date: string) {
 const MOCK_AUDITS = [];
 
 export default function BadgerDen() {
+    // Dashboard login guard
+    React.useEffect(() => {
+      if (typeof window !== 'undefined') {
+        const email = localStorage.getItem('user_email');
+        if (!email) {
+          window.location.href = '/login';
+        }
+      }
+    }, []);
   // Red flag/audit result state for ROI hook
   const [auditResult, setAuditResult] = useState<
     | { totalSavings: number; businessName: string; date: string; redFlags?: { name: string; amount: number; reasoning?: string }[] }
@@ -128,7 +137,7 @@ export default function BadgerDen() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
-    <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-20">
+    <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-4">
       {auditResult === null ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <h2 className="text-2xl font-bold mb-4">No Audit Found</h2>

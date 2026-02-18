@@ -1,5 +1,33 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function AdminPage() {
+  const [user, setUser] = useState<{ email: string | null } | null>(null);
+  const router = useRouter();
+  useEffect(() => {
+    const loggedInUser = { email: typeof window !== 'undefined' ? localStorage.getItem('user_email') : null };
+    setUser(loggedInUser);
+    if (loggedInUser.email !== "basisbadgerllc@gmail.com") {
+      router.replace("/");
+    }
+  }, [router]);
+
+  if (!user || user.email !== "basisbadgerllc@gmail.com") {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0D0D0D] text-white font-sans flex flex-col items-center justify-center">
+      <h1 className="text-4xl font-black mb-6" style={{ color: '#F29C1F' }}>Admin Command Center</h1>
+      <p className="text-zinc-400">Welcome, Head Badger!</p>
+      {/* Add admin features here as needed */}
+    </div>
+  );
+}
+"use client";
+
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Download, ArrowUpDown, TrendingDown } from "lucide-react";

@@ -68,6 +68,7 @@ export default function Home() {
     }
   };
 
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white relative overflow-x-hidden">
       {/* Fixed Site Header */}
@@ -78,6 +79,12 @@ export default function Home() {
           <img src="/logo.png" alt="Basis Badger Logo" className="h-12 w-auto relative z-10" />
         </div>
         {/* Center Nav Links */}
+        <button
+          className="ml-4 px-6 py-2 rounded bg-[#F29C1F] text-zinc-900 font-bold hover:bg-[#FFD700] transition-all"
+          onClick={() => router.push('/login')}
+        >
+          Sign In
+        </button>
         <nav className="flex-1 flex justify-center gap-8">
           <a href="/#how-it-works" className="text-sm font-semibold text-slate-300 hover:text-[#F29C1F] transition-all">How it Works</a>
           <a href="/#pricing" className="text-sm font-semibold text-slate-300 hover:text-[#F29C1F] transition-all">Pricing</a>
