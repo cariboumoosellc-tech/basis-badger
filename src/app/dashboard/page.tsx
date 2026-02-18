@@ -8,11 +8,11 @@ import Head from "next/head";
 import Image from "next/image";
 import ForensicInsights from "@/components/ForensicInsights";
 
-// Default red flags for waste calculation
+// Default red flags for waste calculation (with reasoning)
 const DEFAULT_RED_FLAGS = [
-  { name: "PCI Non-Compliance", amount: 29.95 },
-  { name: "Interchange Padding", amount: 14.2 },
-  { name: "Statement Fee", amount: 9.99 },
+  { name: "PCI Non-Compliance", amount: 29.95, reasoning: "This $29.95 PCI fee is 40% above the $19.99 industry standard for small businesses." },
+  { name: "Interchange Padding", amount: 14.2, reasoning: "Interchange padding is a hidden markup. Industry best practice is full pass-through." },
+  { name: "Statement Fee", amount: 9.99, reasoning: "Statement fees are often negotiable and not required by most processors." },
 ];
 
 // Mock user and audit data
@@ -32,7 +32,10 @@ const MOCK_AUDITS = [];
 
 export default function BadgerDen() {
   // Red flag/audit result state for ROI hook
-  const [auditResult, setAuditResult] = useState<{ totalSavings: number, businessName: string, date: string } | null>(null);
+  const [auditResult, setAuditResult] = useState<
+    | { totalSavings: number; businessName: string; date: string; redFlags?: { name: string; amount: number; reasoning?: string }[] }
+    | null
+  >(null);
   const router = useRouter();
   // Check for redirect from lead and load audit if present
   const [audits, setAudits] = useState(() => {
@@ -74,8 +77,8 @@ export default function BadgerDen() {
   const [activeFilter, setActiveFilter] = useState('All');
   // Branding: logo and title always visible
   // Metrics
-  // Identified Waste: sum red flags and annualize
-  const redFlags = DEFAULT_RED_FLAGS;
+  // Identified Waste: sum red flags and annualize, use auditResult if available
+  const redFlags = auditResult?.redFlags || DEFAULT_RED_FLAGS;
   const monthlyWaste = redFlags.reduce((sum, flag) => sum + flag.amount, 0);
   const totalWaste = Math.round(monthlyWaste * 12 * 100) / 100; // annualized, rounded to 2 decimals
   const verifiedSavings = audits.filter(a => a.status === 'Savings Verified').reduce((sum, a) => sum + a.savings, 0);
@@ -90,16 +93,26 @@ export default function BadgerDen() {
     setView('scanner');
     setIsScanning(true);
     setTimeout(() => {
-      // Simulate a real audit result
+      // Simulate a real audit result with AI metadata
+      const aiRedFlags = [
+        { name: "PCI Non-Compliance", amount: 29.95, reasoning: "This $29.95 PCI fee is 40% above the $19.99 industry standard for small businesses." },
+        { name: "Interchange Padding", amount: 14.2, reasoning: "Interchange padding is a hidden markup. Industry best practice is full pass-through." },
+        { name: "Statement Fee", amount: 9.99, reasoning: "Statement fees are often negotiable and not required by most processors." },
+      ];
+      const aiBusinessName = "Acme Corp";
+      const aiDate = new Date().toISOString().slice(0, 10);
+      const aiTotalSavings = aiRedFlags.reduce((sum, flag) => sum + flag.amount, 0) * 12;
       const newAudit = {
         id: Date.now(),
         fileName: `Merchant_Statement_${Date.now()}.pdf`,
-        date: new Date().toISOString().slice(0, 10),
-        savings: Math.floor(Math.random() * 2000) + 500,
-        businessName: businessName,
+        date: aiDate,
+        savings: aiTotalSavings,
+        businessName: aiBusinessName,
         status: 'Verified',
+        sourceName: aiBusinessName,
+        createdAt: aiDate,
       };
-      setAuditResult({ totalSavings: newAudit.savings, businessName: newAudit.businessName, date: newAudit.date });
+      setAuditResult({ totalSavings: aiTotalSavings, businessName: aiBusinessName, date: aiDate, redFlags: aiRedFlags });
       setAudits(prev => [newAudit, ...prev]); // Prepend to Vault
       setLatestAudit(newAudit);
       setIsScanning(false);
@@ -121,7 +134,7 @@ export default function BadgerDen() {
       </Head>
         {/* The rest of the dashboard content remains unchanged */}
         {/* High-end Blurred Header */}
-        <header className="flex items-center justify-between px-8 py-5 bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 shadow-lg mt-8 mb-8">
+        <header className="flex items-center justify-between px-8 py-5 bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 shadow-lg mt-8 mb-8 pt-16">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Copper Badger Logo" className="h-10 w-auto" />
             <span className="text-2xl font-black tracking-tight" style={{ color: '#F29C1F' }}>The Badger Den</span>
@@ -133,6 +146,9 @@ export default function BadgerDen() {
               if (typeof window !== 'undefined') {
                 localStorage.clear();
                 sessionStorage.clear();
+                document.cookie.split(';').forEach(c => {
+                  document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
+                });
               }
               router.push('/');
             }}

@@ -5,6 +5,7 @@ import React, { useState } from "react";
 interface RedFlag {
   name: string;
   amount: number;
+  reasoning?: string;
 }
 
 interface Benchmark {
@@ -74,18 +75,23 @@ const ForensicInsights: React.FC<ForensicInsightsProps> = ({
         <ul className="mb-3">
           {redFlags.slice(0, 3).map(function(flag: RedFlag, i: number) {
             return (
-              <li key={i} className="flex items-center gap-2 text-base mb-1">
-                <span className="text-red-400">🚩</span>
-                {userTier === 'pro' ? (
-                  <>
-                    <span>{flag.name}</span>:
-                    <span className="font-bold text-[#D4AF37]">${flag.amount.toFixed(2)}</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex items-center gap-1 text-zinc-400 select-none"><span className="material-icons" style={{fontSize:'1rem'}}>&#x1f512;</span>[Locked] Upgrade to reveal</span>:
-                    <span className="font-bold text-[#D4AF37]">${flag.amount.toFixed(2)}</span>
-                  </>
+              <li key={i} className="flex flex-col gap-0 mb-2">
+                <div className="flex items-center gap-2 text-base">
+                  <span className="text-red-400">🚩</span>
+                  {userTier === 'pro' ? (
+                    <>
+                      <span>{flag.name}</span>:
+                      <span className="font-bold text-[#D4AF37]">${flag.amount.toFixed(2)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex items-center gap-1 text-zinc-400 select-none"><span className="material-icons" style={{fontSize:'1rem'}}>&#x1f512;</span>[Locked] Upgrade to reveal</span>:
+                      <span className="font-bold text-[#D4AF37]">${flag.amount.toFixed(2)}</span>
+                    </>
+                  )}
+                </div>
+                {flag.reasoning && (
+                  <div className="text-zinc-500 text-xs ml-7 mt-0.5">{flag.reasoning}</div>
                 )}
               </li>
             );
