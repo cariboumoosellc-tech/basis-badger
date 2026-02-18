@@ -237,7 +237,11 @@ export default function Home() {
                       setQuickAuditStep('scanning');
                       scanningTimeout.current = setTimeout(() => {
                         setShowQuickAudit(false);
-                        window.location.href = '/dashboard?from=lead';
+                        // Redirect to /preview with savings param
+                        const savings = auditData?.summary?.overallScore || 0;
+                        const business = auditData?.sourceName || '';
+                        const date = auditData?.createdAt || new Date().toISOString().slice(0, 10);
+                        window.location.href = `/preview?savings=${encodeURIComponent(savings)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Audit%20Dispatched`;
                       }, 5000);
                     }}
                   >Scan Now</button>
@@ -275,7 +279,11 @@ export default function Home() {
                     status: 'Completed',
                   }));
                 }
-                window.location.href = '/dashboard?from=lead';
+                // Redirect to /preview with savings param
+                const savings = auditData?.summary?.overallScore || 0;
+                const business = auditData?.sourceName || '';
+                const date = auditData?.createdAt || new Date().toISOString().slice(0, 10);
+                window.location.href = `/preview?savings=${encodeURIComponent(savings)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Completed`;
               }}
               modal
             />

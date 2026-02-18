@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   const userEmail = request.cookies.get('user_email')?.value;
 
   // 1. ALWAYS allow these public paths
-  if (pathname === '/' || pathname.startsWith('/api') || pathname.startsWith('/_next') || pathname === '/login') {
+  if (pathname === '/' || pathname.startsWith('/api') || pathname.startsWith('/_next') || pathname === '/login' || pathname.startsWith('/preview')) {
     return NextResponse.next();
   }
 
