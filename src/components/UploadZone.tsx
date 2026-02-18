@@ -28,10 +28,13 @@ export default function UploadZone({ onFileSelected, isBusy = false }: UploadZon
       const file = files[0];
       setFileName(file.name);
       setFileSize(file.size);
-      // Set guest_audit cookie and redirect to /dashboard after upload
+      // Set guest_audit cookie, log, and delay before redirecting to /dashboard
       if (typeof window !== 'undefined') {
-          document.cookie = 'guest_audit=true; path=/; max-age=3600; SameSite=Lax';
-        window.location.href = '/dashboard';
+        document.cookie = 'guest_audit=true; path=/; max-age=3600; SameSite=Lax';
+        console.log('Cookie after upload:', document.cookie);
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 300);
       }
       onFileSelected(file);
     },

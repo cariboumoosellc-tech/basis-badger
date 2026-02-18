@@ -29,12 +29,27 @@ export default function LoginPage() {
       localStorage.setItem("user_role", "admin");
       localStorage.setItem("isPro", "true");
       localStorage.removeItem("badger-latest-audit");
-      router.push("/dashboard");
+      // Set admin cookie, log, and delay before redirect
+      if (typeof window !== 'undefined') {
+        document.cookie = 'user_email=basisbadgerllc@gmail.com; path=/; max-age=86400; SameSite=Lax';
+        console.log('Cookie after admin signup:', document.cookie);
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 300);
+      }
     } else {
       // Login with next-auth
       const res = await signIn('credentials', { email, password, callbackUrl: '/dashboard' });
       if (!res?.error) {
-        // Success: next-auth will redirect
+        // Set admin cookie, log, and delay before redirect if admin
+        if (email === "basisbadgerllc@gmail.com" && typeof window !== 'undefined') {
+          document.cookie = 'user_email=basisbadgerllc@gmail.com; path=/; max-age=86400; SameSite=Lax';
+          console.log('Cookie after admin login:', document.cookie);
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 300);
+        }
+        // For non-admin, let next-auth handle redirect
       } else {
         setError("Invalid credentials.");
       }
