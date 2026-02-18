@@ -65,7 +65,8 @@ export default function BadgerDen() {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const email = localStorage.getItem('user_email');
-      if (!email) {
+      const guestAudit = document.cookie.includes('guest_audit=true');
+      if (!email && !guestAudit) {
         window.location.href = '/login';
       } else if (email === 'basisbadgerllc@gmail.com') {
         setIsAdmin(true);
@@ -102,6 +103,10 @@ export default function BadgerDen() {
       setLatestAudit(newAudit);
       setIsScanning(false);
       setView('certificate');
+      // Set guest_audit cookie for public results view if not logged in
+      if (typeof document !== 'undefined' && !localStorage.getItem('user_email')) {
+        document.cookie = 'guest_audit=true; path=/; max-age=600'; // 10 min
+      }
     }, 2500);
   };
 
@@ -114,10 +119,13 @@ export default function BadgerDen() {
   // For businessName fallback in Vault
   const businessName = auditResult?.businessName || MOCK_USER.businessName;
 
+  // Guest audit logic: if not logged in but guest_audit cookie is set, treat as guest
+  const isGuestAudit = typeof window !== 'undefined' && !userEmail && document.cookie.includes('guest_audit=true');
+
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
       <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-6">
-        {(auditResult || isAdmin) ? (
+        {(auditResult || isAdmin || isGuestAudit) ? (
           <>
             {/* Render report cards and dashboard content here */}
             {/* High-end Blurred Header */}
@@ -188,11 +196,19 @@ export default function BadgerDen() {
             {/* Card 3: Forensic Insights (Dynamic) */}
             <div className="flex-1 flex flex-col items-center justify-center">
               <ForensicInsights
-                userTier={userTier}
-                isPro={isPro}
+                userTier={isGuestAudit ? 'free' : userTier}
+                isPro={isPro && !isGuestAudit}
                 redFlags={redFlags}
                 onViewCertificate={() => setView('certificate')}
               />
+              {isGuestAudit && (
+                <button
+                  className="mt-6 px-8 py-3 rounded-full bg-[#F29C1F] text-zinc-950 font-bold shadow hover:bg-[#D4AF37] transition-all"
+                  onClick={() => router.push('/login')}
+                >
+                  Create Account to Unlock Details
+                </button>
+              )}
             </div>
             {/* Card 4: The Status */}
             <div className="flex-1 flex flex-col items-center justify-center bg-zinc-900/60 rounded-2xl shadow-lg p-8">
