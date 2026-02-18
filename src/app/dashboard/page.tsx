@@ -81,15 +81,10 @@ export default function BadgerDen() {
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        const email = localStorage.getItem('user_email');
-        const guestAudit = document.cookie.includes('guest_audit=true');
-        if (!email && !guestAudit) {
-          window.location.href = '/login';
-        } else if (email === 'basisbadgerllc@gmail.com') {
-          setIsAdmin(true);
-        }
-      }, 300);
+      const email = localStorage.getItem('user_email');
+      if (email === 'basisbadgerllc@gmail.com') {
+        setIsAdmin(true);
+      }
     }
   }, []);
 
