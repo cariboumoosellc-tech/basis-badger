@@ -31,74 +31,38 @@ function getStatementMonth(fileName: string, date: string) {
 const MOCK_AUDITS = [];
 
 export default function BadgerDen() {
-    // Dashboard login guard and admin bypass
-    const [isAdmin, setIsAdmin] = useState(false);
-    React.useEffect(() => {
-      if (typeof window !== 'undefined') {
-        const email = localStorage.getItem('user_email');
-        if (!email) {
-          window.location.href = '/login';
-        } else if (email === 'basisbadgerllc@gmail.com') {
-          return (
-            <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
-              <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-6">
-                {auditResult ? (
-                  // ...existing dashboard results code (cards, header, etc.)...
-                  <>
-                    {/* High-end Blurred Header */}
-                    <header className="flex items-center justify-between px-8 py-5 bg-zinc-900/50 backdrop-blur-md border-b border-zinc-800 shadow-lg mt-8 mb-8 pt-16">
-                      <div className="flex items-center gap-3">
-                        <img src="/logo.png" alt="Copper Badger Logo" className="h-10 w-auto" />
-                        <span className="text-2xl font-black tracking-tight" style={{ color: '#F29C1F' }}>The Badger Den</span>
-                      </div>
-                      <button
-                        className="rounded-full px-5 py-2 font-bold text-sm bg-[#FFD700] text-zinc-900 border border-[#FFD700] hover:bg-[#F29C1F] hover:text-zinc-950 transition-all shadow-lg"
-                        style={{ boxShadow:'0 0 12px 2px #FFD70088'}} 
-                        onClick={() => {
-                          if (typeof window !== 'undefined') {
-                            localStorage.clear();
-                            sessionStorage.clear();
-                            window.location.href = '/';
-                          }
-                        }}
-                      >
-                        Logout
-                      </button>
-                    </header>
-                    {/* ...existing dashboard content (cards, vault, etc.)... */}
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-                    <button
-                      className="w-full md:w-auto px-10 py-8 rounded-2xl font-black text-xl uppercase tracking-wider bg-zinc-950 border-4 border-amber-500 animate-pulse border-opacity-60 shadow-lg text-amber-400 hover:bg-zinc-900/80 hover:border-amber-400 transition-all"
-                      style={{ boxShadow: '0 0 0 2px #F29C1F33' }}
-                      onClick={handleAuditNewStatement}
-                    >
-                      New Forensic Audit
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
+  // Dashboard login guard and admin bypass
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [auditResult, setAuditResult] = useState<any | null>(null);
+  const [audits, setAudits] = useState<any[]>([]);
+  const [latestAudit, setLatestAudit] = useState<any | null>(null);
   const [userTier, setUserTier] = useState<'free' | 'pro'>('free');
-
-  // Move these state hooks to the top-level to fix reference errors
   const [highlightedRows, setHighlightedRows] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
-  // Branding: logo and title always visible
-  // Metrics
-  // Identified Waste: sum red flags and annualize, use auditResult if available
-  const redFlags = auditResult?.redFlags || DEFAULT_RED_FLAGS;
-  const monthlyWaste = redFlags.reduce((sum, flag) => sum + flag.amount, 0);
-  const totalWaste = Math.round(monthlyWaste * 12 * 100) / 100; // annualized, rounded to 2 decimals
-  const verifiedSavings = audits.filter(a => a.status === 'Savings Verified').reduce((sum, a) => sum + a.savings, 0);
   const [showVerifyModal, setShowVerifyModal] = useState<{ open: boolean, audit: any | null }>({ open: false, audit: null });
   const [showConfetti, setShowConfetti] = useState(false);
-  const activeNegotiations = audits.filter(a => a.status === 'Audit Dispatched' || a.status === 'In Progress').length;
-  // Scanner state
   const [isScanning, setIsScanning] = useState(false);
+  const [view, setView] = useState<'dashboard' | 'scanner' | 'certificate'>('dashboard');
+  const router = useRouter();
+
+  // Metrics
+  const redFlags = auditResult?.redFlags || DEFAULT_RED_FLAGS;
+  const monthlyWaste = redFlags.reduce((sum: number, flag: any) => sum + flag.amount, 0);
+  const totalWaste = Math.round(monthlyWaste * 12 * 100) / 100; // annualized, rounded to 2 decimals
+  const verifiedSavings = audits.filter((a: any) => a.status === 'Savings Verified').reduce((sum: number, a: any) => sum + a.savings, 0);
+  const activeNegotiations = audits.filter((a: any) => a.status === 'Audit Dispatched' || a.status === 'In Progress').length;
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('user_email');
+      if (!email) {
+        window.location.href = '/login';
+      } else if (email === 'basisbadgerllc@gmail.com') {
+        setIsAdmin(true);
+      }
+    }
+  }, []);
 
   // Simulate scan completion and add a new audit (Vault integration)
   const handleAuditNewStatement = async () => {
@@ -113,7 +77,7 @@ export default function BadgerDen() {
       ];
       const aiBusinessName = "Acme Corp";
       const aiDate = new Date().toISOString().slice(0, 10);
-      const aiTotalSavings = aiRedFlags.reduce((sum, flag) => sum + flag.amount, 0) * 12;
+      const aiTotalSavings = aiRedFlags.reduce((sum: number, flag: any) => sum + flag.amount, 0) * 12;
       const newAudit = {
         id: Date.now(),
         fileName: `Merchant_Statement_${Date.now()}.pdf`,
@@ -125,7 +89,7 @@ export default function BadgerDen() {
         createdAt: aiDate,
       };
       setAuditResult({ totalSavings: aiTotalSavings, businessName: aiBusinessName, date: aiDate, redFlags: aiRedFlags });
-      setAudits(prev => [newAudit, ...prev]); // Prepend to Vault
+      setAudits((prev: any[]) => [newAudit, ...prev]); // Prepend to Vault
       setLatestAudit(newAudit);
       setIsScanning(false);
       setView('certificate');
@@ -137,6 +101,9 @@ export default function BadgerDen() {
     setLatestAudit(audit);
     setView('certificate');
   };
+
+  // For businessName fallback in Vault
+  const businessName = auditResult?.businessName || MOCK_USER.businessName;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
@@ -152,28 +119,18 @@ export default function BadgerDen() {
               </div>
               <button
                 className="rounded-full px-5 py-2 font-bold text-sm bg-[#FFD700] text-zinc-900 border border-[#FFD700] hover:bg-[#F29C1F] hover:text-zinc-950 transition-all shadow-lg"
-                style={{letterSpacing:2, boxShadow:'0 0 12px 2px #FFD70088'}} 
+                style={{letterSpacing:2 as any, boxShadow:'0 0 12px 2px #FFD70088'}} 
                 onClick={() => {
                   if (typeof window !== 'undefined') {
-                    <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
-                      <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-6">
-                        {auditResult ? (
-                          <AuditResults />
-                        ) : (
-                          <UploaderComponent />
-                        )}
-            style={{letterSpacing:2, boxShadow:'0 0 12px 2px #FFD70088'}} 
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.href = '/';
-              }
-            }}
-          >
-            Logout
-          </button>
-        </header>
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/';
+                  }
+                }}
+              >
+                Logout
+              </button>
+            </header>
         {/* Hero Row: 3 Cards + Red Flags */}
         <section className="max-w-6xl mx-auto py-10 px-4">
           <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch w-full">
@@ -371,6 +328,9 @@ export default function BadgerDen() {
           <img src="/confetti.gif" alt="Confetti" className="w-80 h-80" />
         </div>
       )}
+      </>
+      ) : null}
     </div>
+  </div>
   );
 }
