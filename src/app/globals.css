@@ -61,5 +61,35 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Geist', 'Inter', Arial, Helvetica, sans-serif;
+  scroll-behavior: smooth;
+  /* Blueprint grid overlay */
+  position: relative;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.13;
+  background-image:
+    repeating-linear-gradient(0deg, #2a2a2a 0px, #2a2a2a 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(90deg, #2a2a2a 0px, #2a2a2a 1px, transparent 1px, transparent 40px);
+  background-size: 40px 40px;
+}
+
+.aurora-glow {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 340px;
+  height: 180px;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, #F29C1F88 0%, #D4AF3788 40%, transparent 80%);
+  filter: blur(32px) brightness(1.2);
+  opacity: 0.7;
 }
