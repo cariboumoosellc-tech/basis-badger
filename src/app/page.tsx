@@ -59,18 +59,7 @@ export default function Home() {
     // ...existing effect logic...
   }, [previewUrl]);
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
-        <iframe
-          src="/login"
-          title="Login"
-          className="w-full max-w-md h-[480px] rounded-lg shadow-xl border-2 border-[#F29C1F] bg-zinc-900"
-          style={{ minHeight: 480, background: '#18181b' }}
-        />
-      </div>
-    );
-  }
+  // Remove login redirect: homepage is always public
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-white relative overflow-x-hidden">
       {/* Fixed Site Header */}
