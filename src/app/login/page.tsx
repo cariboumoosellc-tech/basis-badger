@@ -3,8 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-let signIn: any = undefined;
-try { signIn = require('next-auth/react').signIn; } catch {}
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -32,30 +31,10 @@ export default function LoginPage() {
       localStorage.removeItem("badger-latest-audit");
       router.push("/dashboard");
     } else {
-      // Login
-      if (email === "basisbadgerllc@gmail.com") {
-        // Admin bypass
-        localStorage.setItem("user_email", email);
-        localStorage.setItem("user_role", "admin");
-        localStorage.setItem("isPro", "true");
-        localStorage.removeItem("badger-latest-audit");
-        router.push("/dashboard");
-        return;
-      }
-      const adminEmail = localStorage.getItem("admin_email");
-      const adminPassword = localStorage.getItem("admin_password");
-      if (email === adminEmail && password === adminPassword) {
-        localStorage.setItem("user_email", email);
-        localStorage.removeItem("badger-latest-audit");
-        router.push("/dashboard");
-      } else if (signIn) {
-        // Fallback: try next-auth signIn if available
-        const res = await signIn('credentials', { email, password, callbackUrl: '/dashboard', redirect: false });
-        if (res?.ok) {
-          router.push("/dashboard");
-        } else {
-          setError("Invalid credentials.");
-        }
+      // Login with next-auth
+      const res = await signIn('credentials', { email, password, callbackUrl: '/dashboard' });
+      if (!res?.error) {
+        // Success: next-auth will redirect
       } else {
         setError("Invalid credentials.");
       }

@@ -47,8 +47,12 @@ export default function BadgerDen() {
       setUserEmail(localStorage.getItem('user_email'));
     }
   }, []);
-  // Superuser override: admin is always pro
-  const isPro = userEmail === 'basisbadgerllc@gmail.com' || userTier === 'pro';
+  // Superuser override: admin is always pro or guest audit is true
+  // Assume user object and guestAudit are available in scope
+  const guestAudit = typeof window !== 'undefined' ? document.cookie.includes('guest_audit=true') : false;
+  const user = { email: userEmail };
+  const status = userTier;
+  const isPro = user?.email === 'basisbadgerllc@gmail.com' || status === 'pro' || guestAudit === true;
   // Always set isPro true for admin
   React.useEffect(() => {
     if (userEmail === 'basisbadgerllc@gmail.com') {
