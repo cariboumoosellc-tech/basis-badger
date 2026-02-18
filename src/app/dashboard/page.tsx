@@ -31,12 +31,15 @@ function getStatementMonth(fileName: string, date: string) {
 const MOCK_AUDITS = [];
 
 export default function BadgerDen() {
-    // Dashboard login guard
+    // Dashboard login guard and admin bypass
+    const [isAdmin, setIsAdmin] = useState(false);
     React.useEffect(() => {
       if (typeof window !== 'undefined') {
         const email = localStorage.getItem('user_email');
         if (!email) {
           window.location.href = '/login';
+        } else if (email === 'basisbadgerllc@gmail.com') {
+          setIsAdmin(true);
         }
       }
     }, []);
@@ -137,8 +140,8 @@ export default function BadgerDen() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-slate-200 font-sans p-0 mt-24">
-      <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-4">
-        {auditResult ? (
+      <div className="min-h-screen bg-[#0D0D0D] text-slate-200 font-sans p-0 pt-6">
+        {(auditResult || isAdmin) ? (
           <>
             {/* Render report cards and dashboard content here */}
             {/* High-end Blurred Header */}
@@ -222,7 +225,6 @@ export default function BadgerDen() {
                 </div>
               </div>
             </section>
-            {/* ...rest of dashboard content (Vault, modals, etc.)... */}
             {/* Vault: Audit History List */}
             <main className="max-w-3xl mx-auto px-4 pb-16">
               <div className="text-lg font-bold text-slate-200 mb-2 mt-2">Vault</div>
@@ -334,8 +336,13 @@ export default function BadgerDen() {
           </>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-            <h2 className="text-2xl font-bold mb-4">No Audit Found</h2>
-            <p className="text-zinc-400 mb-8">Please upload a statement to begin your forensic audit.</p>
+            <button
+              className="w-full md:w-auto px-10 py-8 rounded-2xl font-black text-xl uppercase tracking-wider bg-zinc-950 border-4 border-amber-500 animate-pulse border-opacity-60 shadow-lg text-amber-400 hover:bg-zinc-900/80 hover:border-amber-400 transition-all"
+              style={{ boxShadow: '0 0 0 2px #F29C1F33' }}
+              onClick={handleAuditNewStatement}
+            >
+              New Forensic Audit
+            </button>
           </div>
         )}
       </div>
