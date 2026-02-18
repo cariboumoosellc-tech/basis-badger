@@ -19,32 +19,8 @@ function getStatementMonth(fileName: string, date: string) {
   const d = new Date(date);
   return d.toLocaleString('default', { month: 'short', year: 'numeric' });
 }
-const MOCK_AUDITS = [
-  {
-    id: 1,
-    fileName: "Merchant_Statement_Jan_2026.pdf",
-    date: "2026-01-31",
-    savings: 142.50,
-    effectiveRate: 2.9,
-    status: "Audit Dispatched"
-  },
-  {
-    id: 2,
-    fileName: "Merchant_Statement_Dec_2025.pdf",
-    date: "2025-12-31",
-    savings: 198.20,
-    effectiveRate: 3.1,
-    status: "Savings Verified"
-  },
-  {
-    id: 3,
-    fileName: "Merchant_Statement_Nov_2025.pdf",
-    date: "2025-11-30",
-    savings: 155.00,
-    effectiveRate: 3.0,
-    status: "Historical"
-  }
-];
+// Only real audits, no placeholders
+const MOCK_AUDITS = [];
 
 export default function BadgerDen() {
   // Check for redirect from lead and load audit if present
@@ -54,11 +30,12 @@ export default function BadgerDen() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          return [...MOCK_AUDITS, parsed];
+          // Only add if it has a filename and date
+          return parsed && parsed.fileName && parsed.date ? [parsed] : [];
         } catch {}
       }
     }
-    return MOCK_AUDITS;
+    return [];
   });
   const businessName = MOCK_USER.businessName;
   const [view, setView] = useState(() => {
@@ -242,137 +219,40 @@ export default function BadgerDen() {
               if (activeFilter === "In Progress") return audit.status === "In Progress";
               return true;
             })
-            .map((audit) => (
-              <div
-                key={audit.id}
-                className={
-                  "grid grid-cols-4 items-center hover:bg-zinc-800/30 transition-colors" +
-                  (highlightedRows &&
-                  (audit.status === "Audit Dispatched" || audit.status === "Savings Verified")
-                    ? " animate-copperPulse bg-[#D4AF37]/10"
-                    : "")
-                }
-              >
-                <div className="p-4 text-zinc-400">{audit.date}</div>
-                <div className="p-4 font-medium">
-                  {getStatementMonth(audit.fileName, audit.date)}
-                </div>
-                <div className="p-4 font-bold" style={{ color: "#F29C1F" }}>
-                  ${audit.savings.toLocaleString()}
-                </div>
-                <div className="p-4 flex gap-2 items-center">
-                  {/* Status Badge Logic */}
-                  {(() => {
-                    let statusLabel = audit.status;
-                    let badgeClass =
-                      "inline-flex items-center justify-center whitespace-nowrap min-w-[120px] border px-3 py-1 rounded-full text-xs font-medium ";
-                    let badgeStyle = {};
-                    let tooltip = null;
-                    if (audit.status === "Savings Verified") {
-                      statusLabel = "Savings Verified";
-                      badgeClass +=
-                        " border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10";
-                      badgeStyle = {
-                        borderColor: "#D4AF37",
-                        color: "#D4AF37",
-                        background: "rgba(212,175,55,0.10)",
-                      };
-                    } else if (
-                      audit.status === "Audit Dispatched" ||
-                      audit.status === "In Progress"
-                    ) {
-                      statusLabel = "Negotiation Active";
-                      badgeClass +=
-                        " border-blue-400 text-blue-400 bg-blue-400/10 animate-pulse";
-                      badgeStyle = {
-                        borderColor: "#60A5FA",
-                        color: "#60A5FA",
-                        background: "rgba(96,165,250,0.10)",
-                      };
-                    } else if (audit.status === "Verification Failed") {
-                      statusLabel = "Contact Processor";
-                      badgeClass +=
-                        " border-amber-500 text-amber-500 bg-amber-100/10";
-                      badgeStyle = {
-                        borderColor: "#f59e42",
-                        color: "#f59e42",
-                        background: "rgba(251,191,36,0.10)",
-                      };
-                      tooltip =
-                        "The rate drop was not confirmed. Please contact your processor or escalate the dispute.";
-                    } else if (
-                      audit.status === "Historical" ||
-                      audit.status === "Completed"
-                    ) {
-                      if (audit.savings > 0) {
-                        statusLabel = "Savings Identified";
-                        badgeClass +=
-                          " border-amber-400 text-amber-400 bg-amber-400/10";
-                        badgeStyle = {
-                          borderColor: "#F29C1F",
-                          color: "#F29C1F",
-                          background: "rgba(242,156,31,0.10)",
-                        };
-                        tooltip = `The Badger has identified $${audit.savings.toFixed(
-                          2
-                        )} in overcharges. Click View Certificate to start the recovery process.`;
-                      } else {
-                        statusLabel = "Audit Sealed";
-                        badgeClass +=
-                          " border-zinc-400 text-zinc-400 bg-zinc-400/10";
-                        badgeStyle = {
-                          borderColor: "#a1a1aa",
-                          color: "#a1a1aa",
-                          background: "rgba(161,161,170,0.10)",
-                        };
-                      }
-                    } else {
-                      statusLabel = audit.status;
-                      badgeClass +=
-                        " border-zinc-400 text-zinc-400 bg-zinc-400/10";
-                      badgeStyle = {
-                        borderColor: "#a1a1aa",
-                        color: "#a1a1aa",
-                        background: "rgba(161,161,170,0.10)",
-                      };
-                    }
-                    return (
-                      <>
-                        <span className={badgeClass} style={badgeStyle}>
-                          {statusLabel}
+            .map((audit, idx) => {
+              // Free Audit: show filename and date, blur/lock savings
+              const isFreeAudit = audit && audit.fileName && audit.date && (!audit.status || audit.status === 'Free Audit');
+              return (
+                <div
+                  key={audit.id || idx}
+                  className={
+                    "grid grid-cols-4 items-center hover:bg-zinc-800/30 transition-colors" +
+                    (highlightedRows ? " animate-copperPulse bg-[#D4AF37]/10" : "")
+                  }
+                >
+                  <div className="p-4 text-zinc-400">{audit.date}</div>
+                  <div className="p-4 font-medium">
+                    {audit.fileName ? getStatementMonth(audit.fileName, audit.date) : '—'}
+                  </div>
+                  <div className="p-4 font-bold relative" style={{ color: "#F29C1F" }}>
+                    {isFreeAudit ? (
+                      <span className="blur-sm select-none cursor-not-allowed" title="Upgrade to unlock savings">Locked
+                        <span className="absolute left-1/2 -translate-x-1/2 mt-1 w-40 bg-black/90 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity duration-200 shadow-lg">
+                          Upgrade to unlock your savings
                         </span>
-                        {tooltip && (
-                          <span className="relative group cursor-pointer ml-1">
-                            <span className="w-4 h-4 flex items-center justify-center rounded-full bg-zinc-200 text-zinc-700 text-xs font-bold border border-zinc-400">
-                              i
-                            </span>
-                            <span className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-black text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity duration-200 shadow-lg">
-                              {tooltip}
-                            </span>
-                          </span>
-                        )}
-                      </>
-                    );
-                  })()}
-                  <button
-                    className="rounded-full text-xs font-bold px-4 py-2 border border-amber-400 text-amber-400 hover:bg-amber-400/10 transition-all"
-                    onClick={() => handleViewCertificate(audit)}
-                  >
-                    {audit.status === "Verification Failed"
-                      ? "Escalate Dispute"
-                      : "View Certificate"}
-                  </button>
-                  {audit.status === "Audit Dispatched" && (
-                    <button
-                      className="rounded-full text-xs font-bold px-4 py-2 border border-green-500 text-green-500 hover:bg-green-500/10 transition-all"
-                      onClick={() => setShowVerifyModal({ open: true, audit })}
-                    >
-                      Confirm Rate Drop
-                    </button>
-                  )}
+                      </span>
+                    ) : (
+                      <>${audit.savings?.toLocaleString?.() ?? '—'}</>
+                    )}
+                  </div>
+                  <div className="p-4 flex gap-2 items-center">
+                    <span className="inline-flex items-center justify-center whitespace-nowrap min-w-[120px] border px-3 py-1 rounded-full text-xs font-medium border-zinc-400 text-zinc-400 bg-zinc-400/10">
+                      {isFreeAudit ? 'Free Audit' : audit.status || '—'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           {/* Highlight state hooks moved to top-level */}
           <style>{`
             @keyframes copperPulse {
