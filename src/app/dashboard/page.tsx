@@ -82,8 +82,8 @@ export default function BadgerDen() {
   const monthlyWaste = redFlags.reduce((sum, flag) => sum + flag.amount, 0);
   const totalWaste = Math.round(monthlyWaste * 12 * 100) / 100; // annualized, rounded to 2 decimals
   const verifiedSavings = audits.filter(a => a.status === 'Savings Verified').reduce((sum, a) => sum + a.savings, 0);
-    const [showVerifyModal, setShowVerifyModal] = useState<{ open: boolean, audit: any | null }>({ open: false, audit: null });
-    const [showConfetti, setShowConfetti] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState<{ open: boolean, audit: any | null }>({ open: false, audit: null });
+  const [showConfetti, setShowConfetti] = useState(false);
   const activeNegotiations = audits.filter(a => a.status === 'Audit Dispatched' || a.status === 'In Progress').length;
   // Scanner state
   const [isScanning, setIsScanning] = useState(false);
