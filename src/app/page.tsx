@@ -237,12 +237,35 @@ export default function Home() {
                       setQuickAuditStep('scanning');
                       scanningTimeout.current = setTimeout(() => {
                         setShowQuickAudit(false);
-                        // Redirect to /preview with savings and issues param
+                        // Redirect to /preview with savings, issues, totalFees, volume, junkFees
                         const savings = auditData?.summary?.overallScore || 0;
                         const issues = auditData?.summary?.highRiskCount || 3;
                         const business = auditData?.sourceName || '';
                         const date = auditData?.createdAt || new Date().toISOString().slice(0, 10);
-                        window.location.href = `/preview?savings=${encodeURIComponent(savings)}&issues=${encodeURIComponent(issues)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Audit%20Dispatched`;
+                        // Fallbacks: try to infer or default
+                        let totalFees = 0;
+                        let volume = 0;
+                        let junkFees = 0;
+                        if (auditData && 'summary' in auditData) {
+                          // Try to infer from findings if possible
+                          if (Array.isArray(auditData.findings)) {
+                            const findingsAny = auditData.findings as any[];
+                            totalFees = findingsAny.reduce((sum, f) => {
+                              if (typeof f.amount === 'number') return sum + f.amount;
+                              if (typeof f.confidence === 'number') return sum + f.confidence;
+                              return sum;
+                            }, 0);
+                            // Junk fees: count or sum of findings with 'junk' in title/category/description
+                            junkFees = findingsAny.filter(f => (f.title || f.category || f.description || '').toLowerCase().includes('junk')).reduce((sum, f) => {
+                              if (typeof f.amount === 'number') return sum + f.amount;
+                              if (typeof f.confidence === 'number') return sum + f.confidence;
+                              return sum;
+                            }, 0);
+                          }
+                          // Use totalFindings as volume fallback if plausible
+                          volume = auditData.summary.totalFindings || 0;
+                        }
+                        window.location.href = `/preview?savings=${encodeURIComponent(savings)}&issues=${encodeURIComponent(issues)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Audit%20Dispatched&totalFees=${encodeURIComponent(totalFees)}&volume=${encodeURIComponent(volume)}&junkFees=${encodeURIComponent(junkFees)}`;
                       }, 5000);
                     }}
                   >Scan Now</button>
@@ -280,12 +303,32 @@ export default function Home() {
                     status: 'Completed',
                   }));
                 }
-                // Redirect to /preview with savings and issues param
+                // Redirect to /preview with savings, issues, totalFees, volume, junkFees
                 const savings = auditData?.summary?.overallScore || 0;
                 const issues = auditData?.summary?.highRiskCount || 3;
                 const business = auditData?.sourceName || '';
                 const date = auditData?.createdAt || new Date().toISOString().slice(0, 10);
-                window.location.href = `/preview?savings=${encodeURIComponent(savings)}&issues=${encodeURIComponent(issues)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Completed`;
+                // Fallbacks: try to infer or default
+                let totalFees = 0;
+                let volume = 0;
+                let junkFees = 0;
+                if (auditData && 'summary' in auditData) {
+                  if (Array.isArray(auditData.findings)) {
+                    const findingsAny = auditData.findings as any[];
+                    totalFees = findingsAny.reduce((sum, f) => {
+                      if (typeof f.amount === 'number') return sum + f.amount;
+                      if (typeof f.confidence === 'number') return sum + f.confidence;
+                      return sum;
+                    }, 0);
+                    junkFees = findingsAny.filter(f => (f.title || f.category || f.description || '').toLowerCase().includes('junk')).reduce((sum, f) => {
+                      if (typeof f.amount === 'number') return sum + f.amount;
+                      if (typeof f.confidence === 'number') return sum + f.confidence;
+                      return sum;
+                    }, 0);
+                  }
+                  volume = auditData.summary.totalFindings || 0;
+                }
+                window.location.href = `/preview?savings=${encodeURIComponent(savings)}&issues=${encodeURIComponent(issues)}&business=${encodeURIComponent(business)}&date=${encodeURIComponent(date)}&rate=2.9&status=Completed&totalFees=${encodeURIComponent(totalFees)}&volume=${encodeURIComponent(volume)}&junkFees=${encodeURIComponent(junkFees)}`;
               }}
               modal
             />

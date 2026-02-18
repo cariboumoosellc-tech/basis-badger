@@ -12,6 +12,9 @@ function PreviewContent() {
   const date = searchParams.get("date") || new Date().toISOString().slice(0, 10);
   const effectiveRate = parseFloat(searchParams.get("rate") || "2.9");
   const status = searchParams.get("status") || "Audit Dispatched";
+  const totalFees = parseFloat(searchParams.get("totalFees") || '0');
+  const volume = parseFloat(searchParams.get("volume") || '0');
+  const junkFees = parseFloat(searchParams.get("junkFees") || '0');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
@@ -24,6 +27,9 @@ function PreviewContent() {
           status,
         }}
         issues={issues}
+        totalFees={totalFees}
+        volume={volume}
+        junkFees={junkFees}
         onUnlock={() => router.push("/pricing")}
       />
     </div>
