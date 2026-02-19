@@ -1,9 +1,26 @@
 
-'use client';
+"use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function LeadVerificationForm() {
+// Accept initialData, modal, onSuccess props
+export type LeadCaptureInitialData = {
+  processorName?: string;
+  totalVolume?: number;
+  annualWaste?: number;
+};
+
+type LeadCaptureProps = {
+  initialData?: {
+    processorName: string;
+    totalVolume: number;
+    annualWaste: number;
+  };
+  modal?: boolean;
+  onSuccess?: () => void;
+};
+
+export default function LeadCapture({ initialData, modal, onSuccess }: LeadCaptureProps) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
