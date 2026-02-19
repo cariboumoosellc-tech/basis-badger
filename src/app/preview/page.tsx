@@ -6,30 +6,16 @@ import { Suspense } from "react";
 function PreviewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const savings = searchParams.get('savings') || '184.50';
+  const savings = parseFloat(searchParams.get('savings') || '184.50');
+  const total = parseFloat(searchParams.get('total') || '4250.00');
   const issues = parseInt(searchParams.get('issues') || '3', 10);
-  const businessName = searchParams.get("business") || "Your Business";
-  const date = searchParams.get("date") || new Date().toISOString().slice(0, 10);
-  const effectiveRate = parseFloat(searchParams.get("rate") || "2.9");
-  const status = searchParams.get("status") || "Audit Dispatched";
-  const totalFees = parseFloat(searchParams.get("totalFees") || '0');
-  const volume = parseFloat(searchParams.get("volume") || '0');
-  const junkFees = parseFloat(searchParams.get("junkFees") || '0');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
       <CertificateOfFindingsSneakPeek
-        businessName={businessName}
-        audit={{
-          date,
-          savings: parseFloat(savings),
-          effectiveRate,
-          status,
-        }}
+        savings={savings}
+        total={total}
         issues={issues}
-        totalFees={totalFees}
-        volume={volume}
-        junkFees={junkFees}
         onUnlock={() => router.push("/pricing")}
       />
     </div>

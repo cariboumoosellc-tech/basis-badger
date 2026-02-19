@@ -73,7 +73,11 @@ export default function LeadCapture({ initialData, onSuccess, modal }: LeadCaptu
         if (typeof window !== 'undefined') {
           localStorage.setItem('badger_audit_results', JSON.stringify(auditResults));
         }
-        router.push('/dashboard');
+        // Redirect to /preview with mock data
+        const mockTotal = 4250.00; // Simulated Total Processed
+        const mockSavings = 184.50; // Simulated Waste
+        const mockIssues = 3; // Simulated Red Flags
+        router.push(`/preview?total=${mockTotal}&savings=${mockSavings}&issues=${mockIssues}`);
       } else {
         setError("Failed to save lead.");
       }
