@@ -1,218 +1,91 @@
-"use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { saveLeadAction } from "@/app/actions/leads";
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-export type LeadCaptureInitialData = {
-  processorName?: string;
-  totalVolume?: number;
-  annualWaste?: number;
-};
-
-type LeadCaptureProps = {
-  initialData?: LeadCaptureInitialData;
-  onSuccess: () => void;
-  modal?: boolean;
-};
-
-export default function LeadCapture({ initialData, onSuccess, modal }: LeadCaptureProps) {
+export default function LeadVerificationForm() {
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [businessEmail, setBusinessEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [error, setError] = useState("");
-  // Hidden intelligence
-  const [processorName] = useState(initialData?.processorName || "");
-  const [monthlyVolume] = useState(initialData?.totalVolume || "");
-  const [annualWaste] = useState(initialData?.annualWaste || "");
+  const [email, setEmail] = useState('');
+
+  // Helper to convert file to base64
+  const toBase64 = (file: File) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove the data:application/pdf;base64, prefix
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = error => reject(error);
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
-    setError("");
-    // Validate required fields
-    if (!fullName.trim()) {
-      setError("Full Name is required.");
-      setIsSaving(false);
-      return;
-    }
-    if (!businessName.trim()) {
-      setError("Business Name is required.");
-      setIsSaving(false);
-      return;
-    }
-    if (!businessEmail.trim()) {
-      setError("Business Email is required.");
-      setIsSaving(false);
-      return;
-    }
-    if (!consent) {
-      setError("Consent is required for us to contact you and release your forensic breakdown.");
-      setIsSaving(false);
-      return;
-    }
+    if (!file) return;
+
+    setIsAnalyzing(true);
     try {
-      const result = await saveLeadAction({
-        merchant_email: businessEmail,
-        processor_name: processorName,
-        monthly_volume: Number(monthlyVolume),
-        annual_waste_found: Number(annualWaste),
+      // 1. Prepare the file
+      const base64File = await toBase64(file);
+      // 2. Call the Brain
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileData: base64File,
+          fileType: file.type
+        })
       });
-      if (result.success) {
-        // Store audit results in localStorage for dashboard hydration
-        const auditResults = {
-          businessName,
-          processorName,
-          monthlyVolume,
-          annualWaste,
-        };
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('badger_audit_results', JSON.stringify(auditResults));
-        }
-        // Connect to Gemini API for real analysis
-        let file = null;
-        // Try to find a file input in the form
-        if (e.target && typeof e.target === 'object') {
-          const form = e.target as HTMLFormElement;
-          const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement;
-          if (fileInput && fileInput.files && fileInput.files[0]) {
-            file = fileInput.files[0];
-          }
-        }
-        if (file) {
-          setIsAnalyzing(true);
-          // Helper: toBase64
-          const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              let result = reader.result as string;
-              // Remove prefix if present
-              const idx = result.indexOf('base64,');
-              if (idx !== -1) result = result.slice(idx + 7);
-              resolve(result);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          try {
-            const base64 = await toBase64(file);
-            const res = await fetch('/api/analyze', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ fileData: base64, fileType: file.type })
-            });
-            const data = await res.json();
-            router.push(`/preview?fees=${data.totalFees || 450.25}&savings=${data.savingsFound || 184.50}&issues=${data.redFlags?.length || 0}`);
-          } catch (err) {
-            console.error('Gemini analysis failed:', err);
-            router.push(`/preview?fees=450.25&savings=184.50&issues=3`);
-          } finally {
-            setIsAnalyzing(false);
-          }
-        } else {
-          // Fallback: redirect with mock data
-          router.push(`/preview?fees=450.25&savings=184.50&issues=3`);
-        }
-      } else {
-        setError("Failed to save lead.");
-      }
-    } catch {
-      setError("Failed to save lead.");
+      if (!response.ok) throw new Error('Analysis failed');
+      const data = await response.json();
+      console.log("Forensic Data Received:", data);
+      // 3. Redirect with REAL Data
+      // We use encodeURIComponent to handle any weird characters
+      const fees = data.totalFees || 0;
+      const savings = data.savingsFound || 0;
+      const issues = data.redFlags?.length || 0;
+      router.push(`/preview?fees=${fees}&savings=${savings}&issues=${issues}`);
+    } catch (error) {
+      console.error("Scan Error:", error);
+      alert("The Badger encountered an error reading that file. Please try a clear image or PDF.");
     } finally {
-      setIsSaving(false);
+      setIsAnalyzing(false);
     }
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className={`max-w-lg mx-auto p-8 shadow-lg rounded-3xl border ${modal ? "border-amber-400 z-20 drop-shadow-2xl animate-fade-in" : "border-slate-200"} bg-[#1A1A1A]`}
-      style={modal ? { minWidth: 380, minHeight: 420 } : {}}
+      className="max-w-lg mx-auto p-8 shadow-lg rounded-3xl border border-amber-400 z-20 drop-shadow-2xl animate-fade-in bg-[#1A1A1A]"
+      style={{ minWidth: 380, minHeight: 420 }}
     >
       <h3 className="text-lg font-black text-amber-400 mb-6 uppercase tracking-wider text-center">
         Lead Verification
       </h3>
       <div className="flex flex-col gap-5">
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-white" htmlFor="fullName">Full Name</label>
-          <input
-            id="fullName"
-            type="text"
-            required
-            value={fullName}
-            onChange={e => setFullName(e.target.value)}
-            placeholder="e.g. Jane Smith"
-            className="rounded-lg border border-slate-600 px-4 py-2 bg-[#232323] text-white focus:border-amber-400 focus:ring-amber-400"
-            autoComplete="name"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-white" htmlFor="businessName">Business Name</label>
-          <input
-            id="businessName"
-            type="text"
-            required
-            value={businessName}
-            onChange={e => setBusinessName(e.target.value)}
-            placeholder="e.g. Acme Corp"
-            className="rounded-lg border border-slate-600 px-4 py-2 bg-[#232323] text-white focus:border-amber-400 focus:ring-amber-400"
-            autoComplete="organization"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-white" htmlFor="businessEmail">Business Email</label>
-          <input
-            id="businessEmail"
-            type="email"
-            required
-            value={businessEmail}
-            onChange={e => setBusinessEmail(e.target.value)}
-            placeholder="e.g. jane@acme.com"
-            className="rounded-lg border border-slate-600 px-4 py-2 bg-[#232323] text-white focus:border-amber-400 focus:ring-amber-400"
-            autoComplete="email"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-white" htmlFor="phone">Phone Number <span className="text-xs text-slate-400">(Optional)</span></label>
-          <input
-            id="phone"
-            type="tel"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            placeholder="(555) 000-0000"
-            className="rounded-lg border border-slate-600 px-4 py-2 bg-[#232323] text-white focus:border-amber-400 focus:ring-amber-400"
-          />
-        </div>
-        {/* Hidden intelligence fields */}
-        <input type="hidden" name="processorName" value={processorName} />
-        <input type="hidden" name="monthlyVolume" value={monthlyVolume} />
-        <input type="hidden" name="annualWaste" value={annualWaste} />
-        <div className="flex items-center mt-2">
-          <input
-            id="consent"
-            type="checkbox"
-            checked={consent}
-            onChange={e => setConsent(e.target.checked)}
-            className="mr-2 accent-amber-400 w-4 h-4 rounded"
-            required
-          />
-          <label htmlFor="consent" className="text-xs text-slate-200 select-none">
-            I consent to receive a forensic breakdown of these results via phone or email.
-          </label>
-        </div>
-        {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
+        <input
+          type="email"
+          placeholder="Enter your email to unlock results"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
+          required
+        />
+        <input
+          type="file"
+          accept=".pdf,image/*"
+          onChange={e => setFile(e.target.files?.[0] || null)}
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 outline-none"
+          required
+        />
         <button
           type="submit"
-          disabled={isSaving || isAnalyzing}
-          className="w-full rounded-full"
-          style={{ background: '#F29C1F', color: '#1A1A1A', fontWeight: 900, textTransform: 'uppercase', fontSize: '1rem', padding: '0.75rem 1.5rem', boxShadow: '0 2px 8px 0 #0002', letterSpacing: '0.05em' }}
+          disabled={!file || isAnalyzing}
+          className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-bold py-4 rounded-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isAnalyzing ? "Scanning Statement..." : isSaving ? "Saving..." : "RELEASE THE BADGER"}
+          {isAnalyzing ? 'Running Forensic Scan...' : 'Release the Badger'}
         </button>
       </div>
     </form>
