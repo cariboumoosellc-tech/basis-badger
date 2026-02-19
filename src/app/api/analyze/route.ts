@@ -9,7 +9,6 @@ interface AnalysisResult {
   redFlags: string[];
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
   try {
