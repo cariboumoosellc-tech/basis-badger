@@ -65,8 +65,13 @@ export async function POST(req: Request) {
     });
 
   } catch (error) {
-    console.error("Gemini Error:", error);
-    // Return safe defaults on error
-    return NextResponse.json({ totalFees: 0, savingsFound: 0, redFlags: [] });
+    console.error("Gemini Analysis Failed:", error);
+    // Return the specific error message to the frontend
+    return NextResponse.json({ 
+      totalFees: 0, 
+      savingsFound: 0, 
+      redFlags: [],
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 }

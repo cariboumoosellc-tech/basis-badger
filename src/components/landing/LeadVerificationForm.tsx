@@ -40,15 +40,21 @@ try {
     })
   });
   const data = await response.json();
-  console.log("API Response:", data);
-  // 3. Validate Response (Don't redirect if empty)
-  if (!data || (data.totalFees === 0 && data.savingsFound === 0)) {
-     alert("The Badger couldn't read that file. Please try a clearer image or PDF.");
-     setIsAnalyzing(false);
-     return; 
-  }
-  // 4. Redirect with REAL Data
-  router.push(`/preview?fees=${data.totalFees}&savings=${data.savingsFound}&issues=${data.redFlags?.length || 0}`);
+    console.log("API Response:", data);
+    // Check for Server Errors first
+    if (data.error) {
+      alert(`Server Error: ${data.error}`);
+      setIsAnalyzing(false);
+      return;
+    }
+    // Check for Empty Data
+    if (!data || (data.totalFees === 0 && data.savingsFound === 0)) {
+      alert("The Badger returned $0. This usually means the statement image was too blurry or the AI couldn't find the 'Total Fees' line.");
+      setIsAnalyzing(false);
+      return; 
+    }
+    // 4. Redirect with REAL Data
+    router.push(`/preview?fees=${data.totalFees}&savings=${data.savingsFound}&issues=${data.redFlags?.length || 0}`);
 } catch (error) {
   console.error("Critical Error:", error);
   alert("Connection failed. Please check your internet or try again.");
