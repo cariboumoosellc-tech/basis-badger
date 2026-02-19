@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 export async function POST(req: Request) {
   try {
     const { fileData, fileType } = await req.json();
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `Analyze this merchant statement. 
     Return ONLY JSON: {"totalFees": number, "totalVolume": number, "junkFees": number, "redFlags": string[]}`;
