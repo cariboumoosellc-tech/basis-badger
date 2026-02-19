@@ -1,4 +1,4 @@
-'use client';
+'use client'; // FORCE UPDATE: Vercel Deploy 2
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, FileText } from 'lucide-react';
