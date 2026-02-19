@@ -1,13 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-interface AnalysisResult {
-  totalFees: number;
-  totalVolume: number;
-  junkFees: number;
-  redFlags: string[];
-}
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
@@ -23,8 +16,8 @@ export async function POST(req: Request) {
       { inlineData: { data: fileData, mimeType: fileType || "application/pdf" } },
     ]);
 
-    const text = result.response.text().replace(/`{3}json|`{3}/g, "").trim();
-    const parsed = JSON.parse(text) as AnalysisResult;
+    const text = result.response.text().replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(text);
 
     return NextResponse.json({
       totalFees: parsed.totalFees || 1250.50,
